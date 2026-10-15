@@ -41,7 +41,7 @@ class RoutineEditorViewModel(
     private val _state = MutableStateFlow(RoutineEditorState())
     val state: StateFlow<RoutineEditorState> = _state.asStateFlow()
 
-    // A second tap on \"Salvar\" before the first write lands must not create a second routine.
+    // A second tap on "Salvar" before the first write lands must not create a second routine.
     private var saving = false
 
     init {

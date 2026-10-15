@@ -40,9 +40,23 @@ fun softDateLabel(due: LocalDate): String = "seria bom até ${due.shortPt()}"
 
 fun LocalTime.hhmm(): String = "${hour.twoDigits()}:${minute.twoDigits()}"
 
-/** Accepts "7", "07:30" or "12:5" so typing a time never needs exact formatting. */
+/** What a masked time field keeps: the digits only, so the colon never has to be typed. */
+fun clockDigits(input: String): String = input.filter { it.isDigit() }.take(4)
+
+/**
+ * Accepts the masked digits ("1430", or "7"/"12" for a whole hour) as well as "07:30" or "12:5".
+ * Three digits are refused: the mask shows "93:0", which is not what "9:30" would mean.
+ */
 fun parseClock(text: String): LocalTime? {
-    val parts = text.trim().split(":")
+    val trimmed = text.trim()
+    if (':' !in trimmed && trimmed.all { it.isDigit() }) {
+        return when (trimmed.length) {
+            1, 2 -> parseClock("$trimmed:0")
+            4 -> parseClock("${trimmed.take(2)}:${trimmed.drop(2)}")
+            else -> null
+        }
+    }
+    val parts = trimmed.split(":")
     if (parts.size > 2) return null
     val hour = parts[0].toIntOrNull() ?: return null
     val minute = if (parts.size == 2) parts[1].toIntOrNull() ?: return null else 0

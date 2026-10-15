@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.verto.data.repository.AnchorDraft
 import com.verto.data.repository.RoutineRepository
+import com.verto.ui.common.clockDigits
 import com.verto.ui.common.hhmm
 import com.verto.ui.common.parseClock
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,7 +30,7 @@ class AnchorEditorViewModel(anchorId: String?, private val routines: RoutineRepo
     private val _state = MutableStateFlow(AnchorEditorState(loaded = anchorId == null))
     val state: StateFlow<AnchorEditorState> = _state.asStateFlow()
 
-    // A second tap on \"Salvar\" before the first write lands must not create a second anchor.
+    // A second tap on "Salvar" before the first write lands must not create a second anchor.
     private var saving = false
 
     init {
@@ -39,7 +40,7 @@ class AnchorEditorViewModel(anchorId: String?, private val routines: RoutineRepo
                 _state.value = if (draft == null) {
                     AnchorEditorState(loaded = true, closed = true)
                 } else {
-                    AnchorEditorState(true, draft.id, draft.name, draft.windowStart.hhmm(), draft.windowEnd.hhmm())
+                    AnchorEditorState(true, draft.id, draft.name, clockDigits(draft.windowStart.hhmm()), clockDigits(draft.windowEnd.hhmm()))
                 }
             }
         }
@@ -47,9 +48,9 @@ class AnchorEditorViewModel(anchorId: String?, private val routines: RoutineRepo
 
     fun setName(value: String) = _state.update { it.copy(name = value, message = null) }
 
-    fun setStart(value: String) = _state.update { it.copy(start = value, message = null) }
+    fun setStart(value: String) = _state.update { it.copy(start = clockDigits(value), message = null) }
 
-    fun setEnd(value: String) = _state.update { it.copy(end = value, message = null) }
+    fun setEnd(value: String) = _state.update { it.copy(end = clockDigits(value), message = null) }
 
     fun save() {
         val current = _state.value
