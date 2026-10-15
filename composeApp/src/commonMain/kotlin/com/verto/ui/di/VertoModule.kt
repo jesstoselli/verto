@@ -4,12 +4,17 @@ import com.verto.data.IdGenerator
 import com.verto.data.SystemZone
 import com.verto.data.UuidIdGenerator
 import com.verto.data.ZoneProvider
+import com.verto.data.remote.AuthSession
+import com.verto.data.remote.VertoApi
 import com.verto.data.repository.DayRepository
 import com.verto.data.repository.InboxRepository
 import com.verto.data.repository.RoutineRepository
 import com.verto.data.repository.TaskRepository
 import com.verto.data.sync.LocalStore
+import com.verto.data.sync.SyncEngine
+import com.verto.data.sync.SyncScheduler
 import com.verto.domain.VertoSettings
+import com.verto.ui.account.AccountViewModel
 import com.verto.ui.common.ClockTicker
 import com.verto.ui.common.Ticker
 import com.verto.ui.editor.AnchorEditorArgs
@@ -21,13 +26,16 @@ import com.verto.ui.editor.TaskEditorViewModel
 import com.verto.ui.inbox.InboxViewModel
 import com.verto.ui.plan.PlanViewModel
 import com.verto.ui.today.TodayViewModel
+import kotlin.time.Clock
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
-import kotlin.time.Clock
 
-/** Expects a `VertoDatabase` from the platform module (androidApp). */
+/** Expects a VertoDatabase, a TokenStore and an HttpClient from the platform module (androidApp). */
 val vertoModule = module {
     single { VertoSettings() }
     single<Clock> { Clock.System }
@@ -39,6 +47,12 @@ val vertoModule = module {
     singleOf(::TaskRepository)
     singleOf(::RoutineRepository)
     singleOf(::DayRepository)
+    single { VertoApi(get()) }
+    single { AuthSession(get(), get()) }
+    single { SyncEngine(get(), get(), get(), get()) }
+    // Lives as long as the process: syncing must not stop when a screen goes away.
+    single { SyncScheduler.of(get(), get(), CoroutineScope(SupervisorJob() + Dispatchers.Default)) }
+    viewModelOf(::AccountViewModel)
     viewModelOf(::InboxViewModel)
     viewModelOf(::PlanViewModel)
     viewModel { (args: TaskEditorArgs) -> TaskEditorViewModel(args.taskId, get()) }

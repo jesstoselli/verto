@@ -19,3 +19,6 @@ data class RoutineEditorRoute(val routineId: String? = null, val fromInboxId: St
 
 @Serializable
 data class AnchorEditorRoute(val anchorId: String? = null)
+
+@Serializable
+data object AccountRoute

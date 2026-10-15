@@ -11,8 +11,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material3.Card
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -40,6 +44,7 @@ fun PlanScreen(
     onOpenTask: (String?) -> Unit,
     onOpenRoutine: (String?) -> Unit,
     onOpenAnchor: (String?) -> Unit,
+    onOpenAccount: () -> Unit,
     viewModel: PlanViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -49,6 +54,13 @@ fun PlanScreen(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
+        item {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                IconButton(onClick = onOpenAccount) {
+                    Icon(Icons.Filled.AccountCircle, contentDescription = "Conta e sync")
+                }
+            }
+        }
         item { SectionHeader("Tarefas", "Nova tarefa") { onOpenTask(null) } }
         if (state.openTasks.isEmpty()) item { Hint("Nenhuma tarefa aberta.") }
         items(state.openTasks, key = { it.id }) { task ->

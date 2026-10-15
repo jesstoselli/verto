@@ -24,6 +24,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import com.verto.ui.account.AccountScreen
 import com.verto.ui.editor.AnchorEditorScreen
 import com.verto.ui.editor.RoutineEditorScreen
 import com.verto.ui.editor.TaskEditorScreen
@@ -88,6 +89,7 @@ fun VertoNavHost() {
                     onOpenTask = { nav.navigate(TaskEditorRoute(it)) },
                     onOpenRoutine = { nav.navigate(RoutineEditorRoute(routineId = it)) },
                     onOpenAnchor = { nav.navigate(AnchorEditorRoute(it)) },
+                    onOpenAccount = { nav.navigate(AccountRoute) },
                 )
             }
             composable<TaskEditorRoute> { backStackEntry ->
@@ -107,6 +109,7 @@ fun VertoNavHost() {
                 val route = backStackEntry.toRoute<AnchorEditorRoute>()
                 AnchorEditorScreen(route.anchorId, onClose = { nav.popBackStack() })
             }
+            composable<AccountRoute> { AccountScreen(onClose = { nav.popBackStack() }) }
         }
     }
 }
