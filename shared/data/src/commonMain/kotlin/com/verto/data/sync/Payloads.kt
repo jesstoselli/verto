@@ -12,12 +12,23 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlin.time.Instant
 
-internal val SyncJson = Json { encodeDefaults = true }
+// Unknown keys are ignored so a newer client can add fields without breaking this one.
+internal val SyncJson = Json {
+    encodeDefaults = true
+    ignoreUnknownKeys = true
+}
 
 // Key names are the sync contract with the API (SyncEntityCatalog.cs); rename nothing here without the server.
+// updatedAt is not required by the server; it travels so a pulled row keeps its original edit time.
 
 @Serializable
-internal data class InboxPayload(val text: String, val createdAt: String, val source: String, val state: String)
+internal data class InboxPayload(
+    val text: String,
+    val createdAt: String,
+    val source: String,
+    val state: String,
+    val updatedAt: String? = null,
+)
 
 @Serializable
 internal data class TaskPayload(
@@ -27,6 +38,7 @@ internal data class TaskPayload(
     val dueKind: String?,
     val pinnedToToday: Boolean,
     val doneAt: String?,
+    val updatedAt: String? = null,
 )
 
 @Serializable
@@ -38,38 +50,67 @@ internal data class StepPayload(
     val title: String,
     val energy: String,
     val doneAt: String?,
+    val updatedAt: String? = null,
 )
 
 @Serializable
-internal data class AnchorPayload(val name: String, val windowStart: String, val windowEnd: String)
+internal data class AnchorPayload(
+    val name: String,
+    val windowStart: String,
+    val windowEnd: String,
+    val updatedAt: String? = null,
+)
 
 @Serializable
-internal data class AnchorEventPayload(val anchorId: String, val day: String, val triggeredAt: String, val source: String)
+internal data class AnchorEventPayload(
+    val anchorId: String,
+    val day: String,
+    val triggeredAt: String,
+    val source: String,
+    val updatedAt: String? = null,
+)
 
 @Serializable
-internal data class RoutinePayload(val name: String, val anchorId: String, val weekdays: List<Int>)
+internal data class RoutinePayload(
+    val name: String,
+    val anchorId: String,
+    val weekdays: List<Int>,
+    val updatedAt: String? = null,
+)
 
 @Serializable
-internal data class RoutineLogPayload(val routineId: String, val day: String, val outcome: String)
+internal data class RoutineLogPayload(
+    val routineId: String,
+    val day: String,
+    val outcome: String,
+    val updatedAt: String? = null,
+)
 
 @Serializable
-internal data class DayEnergyPayload(val day: String, val level: String, val setAt: String)
+internal data class DayEnergyPayload(
+    val day: String,
+    val level: String,
+    val setAt: String,
+    val updatedAt: String? = null,
+)
 
-private fun Long.iso(): String = Instant.fromEpochMilliseconds(this).toString()
+internal fun Long.iso(): String = Instant.fromEpochMilliseconds(this).toString()
 
-internal fun InboxItemEntity.toPayload() = InboxPayload(text, createdAt.iso(), source, state)
+internal fun InboxItemEntity.toPayload() = InboxPayload(text, createdAt.iso(), source, state, updatedAt.iso())
 
-internal fun TaskEntity.toPayload() = TaskPayload(title, notes, dueDate, dueKind, pinnedToToday, doneAt?.iso())
+internal fun TaskEntity.toPayload() =
+    TaskPayload(title, notes, dueDate, dueKind, pinnedToToday, doneAt?.iso(), updatedAt.iso())
 
-internal fun StepEntity.toPayload() = StepPayload(taskId, routineId, plan, order, title, energy, doneAt?.iso())
+internal fun StepEntity.toPayload() =
+    StepPayload(taskId, routineId, plan, order, title, energy, doneAt?.iso(), updatedAt.iso())
 
-internal fun AnchorEntity.toPayload() = AnchorPayload(name, windowStart, windowEnd)
+internal fun AnchorEntity.toPayload() = AnchorPayload(name, windowStart, windowEnd, updatedAt.iso())
 
-internal fun AnchorEventEntity.toPayload() = AnchorEventPayload(anchorId, day, triggeredAt.iso(), source)
+internal fun AnchorEventEntity.toPayload() = AnchorEventPayload(anchorId, day, triggeredAt.iso(), source, updatedAt.iso())
 
 internal fun RoutineEntity.toPayload() =
-    RoutinePayload(name, anchorId, weekdays.split(',').filter { it.isNotBlank() }.map { it.toInt() })
+    RoutinePayload(name, anchorId, weekdays.split(',').filter { it.isNotBlank() }.map { it.toInt() }, updatedAt.iso())
 
-internal fun RoutineLogEntity.toPayload() = RoutineLogPayload(routineId, day, outcome)
+internal fun RoutineLogEntity.toPayload() = RoutineLogPayload(routineId, day, outcome, updatedAt.iso())
 
-internal fun DayEnergyEntity.toPayload() = DayEnergyPayload(day, level, setAt.iso())
+internal fun DayEnergyEntity.toPayload() = DayEnergyPayload(day, level, setAt.iso(), updatedAt.iso())
