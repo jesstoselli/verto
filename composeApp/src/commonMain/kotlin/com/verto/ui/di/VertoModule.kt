@@ -12,8 +12,12 @@ import com.verto.data.sync.LocalStore
 import com.verto.domain.VertoSettings
 import com.verto.ui.common.ClockTicker
 import com.verto.ui.common.Ticker
+import com.verto.ui.editor.TaskEditorArgs
+import com.verto.ui.editor.TaskEditorViewModel
 import com.verto.ui.inbox.InboxViewModel
+import com.verto.ui.plan.PlanViewModel
 import org.koin.core.module.dsl.singleOf
+import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 import kotlin.time.Clock
@@ -31,4 +35,6 @@ val vertoModule = module {
     singleOf(::RoutineRepository)
     singleOf(::DayRepository)
     viewModelOf(::InboxViewModel)
+    viewModelOf(::PlanViewModel)
+    viewModel { (args: TaskEditorArgs) -> TaskEditorViewModel(args.taskId, get()) }
 }
