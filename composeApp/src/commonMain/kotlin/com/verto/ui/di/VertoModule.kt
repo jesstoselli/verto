@@ -12,6 +12,10 @@ import com.verto.data.sync.LocalStore
 import com.verto.domain.VertoSettings
 import com.verto.ui.common.ClockTicker
 import com.verto.ui.common.Ticker
+import com.verto.ui.editor.AnchorEditorArgs
+import com.verto.ui.editor.AnchorEditorViewModel
+import com.verto.ui.editor.RoutineEditorArgs
+import com.verto.ui.editor.RoutineEditorViewModel
 import com.verto.ui.editor.TaskEditorArgs
 import com.verto.ui.editor.TaskEditorViewModel
 import com.verto.ui.inbox.InboxViewModel
@@ -37,4 +41,6 @@ val vertoModule = module {
     viewModelOf(::InboxViewModel)
     viewModelOf(::PlanViewModel)
     viewModel { (args: TaskEditorArgs) -> TaskEditorViewModel(args.taskId, get()) }
+    viewModel { (args: AnchorEditorArgs) -> AnchorEditorViewModel(args.anchorId, get()) }
+    viewModel { (args: RoutineEditorArgs) -> RoutineEditorViewModel(args, get(), get()) }
 }
