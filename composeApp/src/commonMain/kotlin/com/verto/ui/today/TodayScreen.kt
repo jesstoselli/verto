@@ -414,9 +414,8 @@ private fun TaskCardView(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                val next = card.nextStep
-                if (next != null) {
-                    StepCheckRow("Próximo: ${next.title}", checked = false, energy = next.energy) { onToggleStep(next.id) }
+                card.upcomingSteps.forEach { step ->
+                    StepCheckRow(step.title, checked = false, energy = step.energy) { onToggleStep(step.id) }
                 }
                 TextButton(onClick = { onComplete(card.task.id) }) { Text("Concluir") }
             }

@@ -192,4 +192,22 @@ class TodayBuilderTest {
 
         assertEquals(listOf("thisMorning", "yesterday"), today.recentlyDone.map { it.id })
     }
+
+    @Test
+    fun taskCard_showsTheNextThreeUndoneSteps_inOrder() {
+        val today = build(
+            tasks = listOf(task("louca", pinned = true)),
+            steps = listOf(
+                taskStep("s4", "louca", order = 4),
+                taskStep("s0", "louca", order = 0, doneAt = at(15, 9)),
+                taskStep("s2", "louca", order = 2),
+                taskStep("s1", "louca", order = 1),
+                taskStep("s3", "louca", order = 3),
+            ),
+        )
+        val card = today.pinned.single()
+
+        assertEquals(listOf("s1", "s2", "s3"), card.upcomingSteps.map { it.id })
+        assertEquals("s1", card.nextStep?.id)
+    }
 }

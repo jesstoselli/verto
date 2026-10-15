@@ -52,10 +52,13 @@ data class AnchorSection(
 
 data class TaskCard(
     val task: Task,
-    val nextStep: Step?,
+    /** The next few undone steps in order: enough to see where it is going, short of the whole list. */
+    val upcomingSteps: List<Step>,
     val doneSteps: Int,
     val totalSteps: Int,
-)
+) {
+    val nextStep: Step? get() = upcomingSteps.firstOrNull()
+}
 
 data class Today(
     val day: LocalDate,
@@ -134,11 +137,13 @@ object TodayBuilder {
             StepState(it, RoutineRules.isDoneOn(it, input.day, input.zone, input.settings.dayStartsAt))
         }
 
+    private const val UPCOMING_STEPS = 3
+
     private fun card(task: Task, steps: List<Step>): TaskCard {
         val own = steps.filter { it.owner == StepOwner.OfTask(task.id) }.sortedBy { it.order }
         return TaskCard(
             task = task,
-            nextStep = own.firstOrNull { it.doneAt == null },
+            upcomingSteps = own.filter { it.doneAt == null }.take(UPCOMING_STEPS),
             doneSteps = own.count { it.doneAt != null },
             totalSteps = own.size,
         )
