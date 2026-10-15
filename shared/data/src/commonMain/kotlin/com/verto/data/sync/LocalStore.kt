@@ -14,10 +14,13 @@ import com.verto.data.db.SyncStateEntity
 import com.verto.data.db.TaskEntity
 import com.verto.data.db.VertoDatabase
 import kotlinx.coroutines.flow.Flow
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlin.time.Instant
 
 /** A change pulled from the server, payload still as JSON text. */
+@Serializable
 data class RemoteChange(
     val entityType: String,
     val id: String,
@@ -44,16 +47,32 @@ class LocalStore(val db: VertoDatabase) {
     /**
      * Writes pulled records straight to their tables (they must not go back out through the outbox)
      * and moves the cursor in the same transaction, so a crash never skips or half-applies a page.
+     * A record this build cannot read (a newer client's type or field) is parked instead of dropped,
+     * since the cursor moves past it, and retried on every pull until an update can read it.
      */
     suspend fun applyRemote(changes: List<RemoteChange>, cursor: Long, receivedAt: Long) {
         db.useWriterConnection { transactor ->
             transactor.immediateTransaction {
-                for (change in changes) {
+                val stillParked = linkedMapOf<Pair<String, String>, RemoteChange>()
+                for (change in readParked() + changes) {
                     // A local edit still waiting in the outbox wins: it reaches the server on the next push.
                     if (db.outboxDao().hasPending(change.entityType, change.id)) continue
+                    val key = change.entityType to change.id
                     val row = RemoteDecoder.decode(change.entityType, change.id, change.payload, change.deletedAt, receivedAt)
-                    upsertQuietly(row)
+                    when {
+                        row != null -> {
+                            upsertQuietly(row)
+                            stillParked.remove(key)
+                        }
+                        // The server accepts tombstones with a minimal payload: delete by id.
+                        change.deletedAt != null -> {
+                            markDeleted(change.entityType, change.id, change.deletedAt)
+                            stillParked.remove(key)
+                        }
+                        else -> stillParked[key] = change
+                    }
                 }
+                db.syncStateDao().put(SyncStateEntity(PARKED, SyncJson.encodeToString(stillParked.values.toList())))
                 db.syncStateDao().put(SyncStateEntity(CURSOR, cursor.toString()))
             }
         }
@@ -79,9 +98,27 @@ class LocalStore(val db: VertoDatabase) {
         }
     }
 
-    private companion object {
+    internal suspend fun parked(): List<RemoteChange> = readParked()
+
+    private suspend fun readParked(): List<RemoteChange> =
+        db.syncStateDao().get(PARKED)?.let { SyncJson.decodeFromString<List<RemoteChange>>(it) } ?: emptyList()
+
+    private suspend fun markDeleted(entityType: String, id: String, deletedAt: Long) {
+        when (entityType) {
+            "inbox_item" -> db.inboxDao().get(id)?.let { db.inboxDao().upsert(it.copy(deletedAt = deletedAt, updatedAt = deletedAt)) }
+            "task" -> db.taskDao().get(id)?.let { db.taskDao().upsert(it.copy(deletedAt = deletedAt, updatedAt = deletedAt)) }
+            "step" -> db.stepDao().get(id)?.let { db.stepDao().upsert(it.copy(deletedAt = deletedAt, updatedAt = deletedAt)) }
+            "anchor" -> db.anchorDao().getAnchor(id)?.let { db.anchorDao().upsertAnchor(it.copy(deletedAt = deletedAt, updatedAt = deletedAt)) }
+            "routine" -> db.routineDao().getRoutine(id)?.let { db.routineDao().upsertRoutine(it.copy(deletedAt = deletedAt, updatedAt = deletedAt)) }
+            // Events, logs and energy have no lookup by id; their tombstones always come from this app, with a full payload.
+            else -> Unit
+        }
+    }
+
+    internal companion object {
         const val CURSOR = "pull_cursor"
         const val LAST_SYNCED_AT = "last_synced_at"
+        const val PARKED = "parked_changes"
     }
 }
 

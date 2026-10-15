@@ -11,6 +11,11 @@ import com.verto.data.repository.TaskDraft
 import com.verto.domain.model.EnergyLevel
 import com.verto.domain.model.InboxSource
 import com.verto.domain.model.StepEnergy
+import kotlin.test.AfterTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertIs
+import kotlin.test.assertTrue
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.first
@@ -23,11 +28,6 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
-import kotlin.test.AfterTest
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertIs
-import kotlin.test.assertTrue
 
 class SyncEngineTest {
 
@@ -224,5 +224,34 @@ class SyncEngineTest {
         assertEquals(db1.routineDao().logFor(routineId, day.toString()), db2.routineDao().logFor(routineId, day.toString()))
         assertEquals(db1.dayEnergyDao().latest(day.toString()), db2.dayEnergyDao().latest(day.toString()))
         assertTrue(db2.outboxDao().all().isEmpty())
+    }
+
+    @Test
+    fun v1EraPayload_carriesItsUpdatedAtFromTheOutbox() = runTest {
+        phone.db.outboxDao().enqueue(
+            com.verto.data.db.OutboxEntity(
+                entityType = "anchor",
+                entityId = "22222222-2222-2222-2222-222222222222",
+                payload = """{"name":"Acordei","windowStart":"07:00","windowEnd":"09:00"}""",
+                deletedAt = null,
+                clientUpdatedAt = 1_700_000_000_000,
+            ),
+        )
+
+        phone.engine().sync()
+
+        val sent = server.records.getValue("anchor" to "22222222-2222-2222-2222-222222222222").payload.jsonObject
+        assertEquals("2023-11-14T22:13:20Z", sent["updatedAt"]?.jsonPrimitive?.content)
+    }
+
+    @Test
+    fun serverDateFormat_withMicrosecondsAndOffset_isRead() = runTest {
+        val id = phone.tasks.save(TaskDraft(null, "lavar louça"))
+        phone.engine().sync()
+        server.seed("task", id, taskPayload("lavar louça"), deletedAt = "2026-10-15T13:00:00.123456+00:00")
+
+        phone.engine().sync()
+
+        assertTrue(phone.tasks.observeTasks().first().isEmpty())
     }
 }

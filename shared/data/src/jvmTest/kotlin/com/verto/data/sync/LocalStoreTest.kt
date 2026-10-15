@@ -1,6 +1,7 @@
 package com.verto.data.sync
 
 import com.verto.data.db.InboxItemEntity
+import com.verto.data.db.SyncStateEntity
 import com.verto.data.db.TaskEntity
 import com.verto.data.db.inMemoryVertoDatabase
 import kotlin.test.AfterTest
@@ -12,6 +13,7 @@ import kotlin.test.assertTrue
 import kotlin.time.Instant
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.encodeToString
 
 class LocalStoreTest {
 
@@ -129,5 +131,33 @@ class LocalStoreTest {
         store.write { put(TaskEntity("t1", "IR", null, null, null, false, null, 1_000, null)) }
 
         assertEquals(1, store.observePendingCount().first())
+    }
+
+    @Test
+    fun applyRemote_minimalTombstone_deletesById() = runTest {
+        store.applyRemote(listOf(remoteInbox("r1", "vai sumir")), cursor = 1, receivedAt = 0)
+
+        store.applyRemote(listOf(RemoteChange("inbox_item", "r1", "{}", 5_000)), cursor = 2, receivedAt = 0)
+
+        assertEquals(5_000, db.inboxDao().get("r1")?.deletedAt)
+    }
+
+    @Test
+    fun applyRemote_unreadableRecord_isParkedNotLost() = runTest {
+        store.applyRemote(listOf(RemoteChange("habit", "h1", "{}", null)), cursor = 1, receivedAt = 0)
+        store.applyRemote(emptyList(), cursor = 2, receivedAt = 0)
+
+        assertEquals(listOf("h1"), store.parked().map { it.id })
+    }
+
+    @Test
+    fun applyRemote_retriesParkedRecords_onceTheyCanBeRead() = runTest {
+        // As if an older build had parked a record it could not read yet.
+        db.syncStateDao().put(SyncStateEntity(LocalStore.PARKED, SyncJson.encodeToString(listOf(remoteInbox("r1", "voltou")))))
+
+        store.applyRemote(emptyList(), cursor = 3, receivedAt = 0)
+
+        assertEquals("voltou", db.inboxDao().get("r1")?.text)
+        assertTrue(store.parked().isEmpty())
     }
 }

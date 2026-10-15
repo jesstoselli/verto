@@ -11,6 +11,9 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlin.time.Clock
 import kotlin.time.Instant
 
@@ -78,10 +81,17 @@ class SyncEngine(
     private fun OutboxEntity.toChangeIn() = ChangeIn(
         entityType = entityType,
         id = entityId,
-        payload = Json.parseToJsonElement(payload),
+        payload = Json.parseToJsonElement(payload).withUpdatedAt(clientUpdatedAt),
         deletedAt = deletedAt?.iso(),
         clientUpdatedAt = clientUpdatedAt.iso(),
     )
+
+    // Entries queued before payloads carried updatedAt (DB v1) take it from the outbox row,
+    // or the first pull-back would rewrite every old record's edit time to the moment of the sync.
+    private fun JsonElement.withUpdatedAt(clientUpdatedAt: Long): JsonElement {
+        if (this !is JsonObject || "updatedAt" in this) return this
+        return JsonObject(this + ("updatedAt" to JsonPrimitive(clientUpdatedAt.iso())))
+    }
 
     private fun ChangeOut.toRemoteChange() = RemoteChange(
         entityType = entityType,
