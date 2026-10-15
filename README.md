@@ -34,3 +34,13 @@ O app sincroniza com a API em `https://verto-api.billfolder.app` (repo `verto-ap
 ```bash
 ./gradlew :shared:data:jvmTest --tests '*Sync*'
 ```
+
+## Só 1 coisa, dia limpo e Ajustes
+
+- **Só 1 coisa**: o card do topo da Hoje mostra um passo só, escolhido pela energia do dia (baixa = só passos leves; média = leves e médios; alta = todos), na ordem: rotina de âncora que já disparou → tarefa com prazo real → tarefa fixada. Tocar no card abre em tela cheia com Feito, Outro, Tá grande demais e Sair.
+- **Dia limpo**: tira tudo de Pra hoje e incuba os despejos soltos. Nada é apagado nem marcado como atrasado. Fica em Ajustes e na tela "Que bom te ver", que aparece depois de alguns dias sem abrir o app.
+- **Ajustes** (engrenagem no Planejar): virada do dia, dias de ausência, horário de silêncio e Conta e sync. Os ajustes ficam neste aparelho.
+
+```bash
+./gradlew :shared:domain:jvmTest --tests '*TunnelRules*'
+```
