@@ -4,6 +4,7 @@ import android.app.Application
 import com.verto.data.db.vertoDatabase
 import com.verto.data.remote.TokenStore
 import com.verto.data.remote.vertoHttpClient
+import com.verto.data.settings.SettingsStore
 import com.verto.data.sync.SyncScheduler
 import com.verto.ui.di.vertoModule
 import io.ktor.client.engine.okhttp.OkHttp
@@ -20,6 +21,7 @@ class VertoApplication : Application() {
                 module {
                     single { vertoDatabase(androidContext()) }
                     single<TokenStore> { PrefsTokenStore(androidContext()) }
+                    single<SettingsStore> { PrefsSettingsStore(androidContext()) }
                     single { vertoHttpClient(OkHttp.create()) }
                 },
                 vertoModule,

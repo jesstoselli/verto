@@ -7,7 +7,8 @@ import com.verto.data.repository.InboxRepository
 import com.verto.data.repository.RoutineRepository
 import com.verto.data.repository.TaskRepository
 import com.verto.data.sync.LocalStore
-import com.verto.domain.VertoSettings
+import com.verto.data.settings.InMemorySettingsStore
+import com.verto.data.settings.SettingsRepository
 import com.verto.ui.common.Ticker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -45,7 +46,7 @@ class ManualTicker(start: Instant) : Ticker {
 class UiTestGraph(start: Instant = uiAt(15, 10)) {
     val clock = TestClock(start)
     val ids = SequentialIds()
-    val settings = VertoSettings()
+    val settings = SettingsRepository(InMemorySettingsStore())
     val ticker = ManualTicker(start)
     val db = inMemoryVertoDatabase()
     val store = LocalStore(db)

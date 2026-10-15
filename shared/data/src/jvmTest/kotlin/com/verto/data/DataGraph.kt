@@ -35,6 +35,6 @@ class DataGraph(start: Instant = localAt(15, 10)) {
     val store = LocalStore(db)
     val inbox = InboxRepository(store, clock, ids)
     val tasks = TaskRepository(store, clock, ids)
-    val routines = RoutineRepository(store, clock, ids, { TestZone }, settings)
+    val routines = RoutineRepository(store, clock, ids, { TestZone }, { settings })
     val days = DayRepository(store, clock, ids)
 }

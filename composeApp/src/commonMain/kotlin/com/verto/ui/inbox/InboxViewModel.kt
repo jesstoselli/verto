@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.verto.data.repository.InboxRepository
 import com.verto.data.repository.TaskDraft
 import com.verto.data.repository.TaskRepository
-import com.verto.domain.VertoSettings
+import com.verto.domain.SettingsSource
 import com.verto.domain.model.InboxItem
 import com.verto.domain.model.InboxSource
 import com.verto.domain.model.InboxState
@@ -27,7 +27,7 @@ data class InboxUiState(
 class InboxViewModel(
     private val inbox: InboxRepository,
     private val tasks: TaskRepository,
-    settings: VertoSettings,
+    settings: SettingsSource,
 ) : ViewModel() {
 
     private val draft = MutableStateFlow("")
@@ -46,7 +46,7 @@ class InboxViewModel(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), InboxUiState())
 
     init {
-        viewModelScope.launch { inbox.incubateStale(settings) }
+        viewModelScope.launch { inbox.incubateStale(settings.current()) }
     }
 
     fun onDraftChange(text: String) {

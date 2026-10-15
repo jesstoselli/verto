@@ -10,10 +10,11 @@ import com.verto.data.repository.DayRepository
 import com.verto.data.repository.InboxRepository
 import com.verto.data.repository.RoutineRepository
 import com.verto.data.repository.TaskRepository
+import com.verto.data.settings.SettingsRepository
 import com.verto.data.sync.LocalStore
 import com.verto.data.sync.SyncEngine
 import com.verto.data.sync.SyncScheduler
-import com.verto.domain.VertoSettings
+import com.verto.domain.SettingsSource
 import com.verto.ui.account.AccountViewModel
 import com.verto.ui.common.ClockTicker
 import com.verto.ui.common.Ticker
@@ -35,9 +36,10 @@ import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
-/** Expects a VertoDatabase, a TokenStore and an HttpClient from the platform module (androidApp). */
+/** Expects a VertoDatabase, a TokenStore, a SettingsStore and an HttpClient from the platform module (androidApp). */
 val vertoModule = module {
-    single { VertoSettings() }
+    single { SettingsRepository(get()) }
+    single<SettingsSource> { get<SettingsRepository>() }
     single<Clock> { Clock.System }
     single<IdGenerator> { UuidIdGenerator }
     single<ZoneProvider> { SystemZone }

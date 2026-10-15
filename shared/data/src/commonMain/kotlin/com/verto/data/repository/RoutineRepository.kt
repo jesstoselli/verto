@@ -12,7 +12,7 @@ import com.verto.data.sync.toEnum
 import com.verto.data.sync.wire
 import com.verto.data.toDomain
 import com.verto.data.toWire
-import com.verto.domain.VertoSettings
+import com.verto.domain.SettingsSource
 import com.verto.domain.model.Anchor
 import com.verto.domain.model.AnchorTrigger
 import com.verto.domain.model.Plan
@@ -20,18 +20,18 @@ import com.verto.domain.model.Routine
 import com.verto.domain.model.RoutineOutcome
 import com.verto.domain.rules.AnchorRules
 import com.verto.domain.rules.RoutineRules
+import kotlin.time.Clock
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.datetime.LocalDate
-import kotlin.time.Clock
 
 class RoutineRepository(
     private val store: LocalStore,
     private val clock: Clock,
     private val ids: IdGenerator,
     private val zones: ZoneProvider,
-    private val settings: VertoSettings,
+    private val settings: SettingsSource,
 ) {
     private val anchorDao = store.db.anchorDao()
     private val routineDao = store.db.routineDao()
@@ -139,7 +139,7 @@ class RoutineRepository(
         store.write {
             val anchors = anchorDao.activeAnchors().map { it.toDomain() }
             val events = anchorDao.eventsOn(day.toString()).map { it.toDomain() }
-            AnchorRules.windowsToRecord(anchors, day, events, now, zones.current(), settings.dayStartsAt).forEach {
+            AnchorRules.windowsToRecord(anchors, day, events, now, zones.current(), settings.current().dayStartsAt).forEach {
                 put(AnchorEventEntity(ids.newId(), it.id, day.toString(), nowMs, AnchorTrigger.Window.wire(), nowMs, null))
             }
         }
@@ -153,11 +153,11 @@ class RoutineRepository(
         store.write {
             val row = stepDao.get(stepId) ?: return@write
             val routineId = row.routineId ?: return@write
-            val doneToday = RoutineRules.isDoneOn(row.toDomain(), day, zone, settings.dayStartsAt)
+            val doneToday = RoutineRules.isDoneOn(row.toDomain(), day, zone, settings.current().dayStartsAt)
             put(row.copy(doneAt = if (doneToday) null else nowMs, updatedAt = nowMs))
 
             val steps = stepDao.forRoutine(routineId).map { it.toDomain() }
-            val outcome = RoutineRules.completedOutcome(routineId, steps, day, zone, settings.dayStartsAt)
+            val outcome = RoutineRules.completedOutcome(routineId, steps, day, zone, settings.current().dayStartsAt)
             val log = routineDao.logFor(routineId, day.toString())
             when {
                 outcome != null && log == null ->

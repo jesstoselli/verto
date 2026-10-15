@@ -144,4 +144,16 @@ class TodayViewModelTest : ViewModelTest() {
         val after = vm.content { it.today.pinned.isEmpty() }
         assertEquals(listOf(id), after.today.recentlyDone.map { it.id })
     }
+
+    @Test
+    fun changingTheDayStart_movesHojeOnResume() = runTest {
+        graph.advanceTo(uiAt(16, 2))
+        val vm = viewModel()
+        assertEquals(LocalDate(2026, 10, 15), vm.content().today.day)
+
+        graph.settings.update { it.copy(dayStartsAt = LocalTime(0, 0)) }
+        vm.onResume()
+
+        vm.content { it.today.day == LocalDate(2026, 10, 16) }
+    }
 }

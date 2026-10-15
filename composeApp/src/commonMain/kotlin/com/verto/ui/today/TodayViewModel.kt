@@ -6,7 +6,7 @@ import com.verto.data.ZoneProvider
 import com.verto.data.repository.DayRepository
 import com.verto.data.repository.RoutineRepository
 import com.verto.data.repository.TaskRepository
-import com.verto.domain.VertoSettings
+import com.verto.domain.SettingsSource
 import com.verto.domain.model.EnergyLevel
 import com.verto.domain.model.Plan
 import com.verto.domain.rules.LogicalDay
@@ -48,7 +48,7 @@ class TodayViewModel(
     private val days: DayRepository,
     ticker: Ticker,
     private val zones: ZoneProvider,
-    private val settings: VertoSettings,
+    private val settings: SettingsSource,
     private val clock: Clock,
 ) : ViewModel() {
 
@@ -85,7 +85,7 @@ class TodayViewModel(
                 TodayInput(
                     day = day,
                     zone = zones.current(),
-                    settings = settings,
+                    settings = settings.current(),
                     energy = energy ?: EnergyLevel.Medium,
                     anchors = routineDay.anchors,
                     routines = routineDay.routines,
@@ -132,7 +132,7 @@ class TodayViewModel(
         viewModelScope.launch { tasks.setDone(taskId, true) }
     }
 
-    private fun dayOf(instant: Instant): LocalDate = LogicalDay.of(instant, zones.current(), settings.dayStartsAt)
+    private fun dayOf(instant: Instant): LocalDate = LogicalDay.of(instant, zones.current(), settings.current().dayStartsAt)
 
     private fun withDay(action: suspend (LocalDate) -> Unit) {
         val now = clock.now()

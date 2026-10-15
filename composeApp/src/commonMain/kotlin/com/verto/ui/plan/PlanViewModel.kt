@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.verto.data.ZoneProvider
 import com.verto.data.repository.RoutineRepository
 import com.verto.data.repository.TaskRepository
-import com.verto.domain.VertoSettings
+import com.verto.domain.SettingsSource
 import com.verto.domain.model.Anchor
 import com.verto.domain.model.Routine
 import com.verto.domain.model.Task
@@ -38,7 +38,7 @@ class PlanViewModel(
     routines: RoutineRepository,
     ticker: Ticker,
     zones: ZoneProvider,
-    settings: VertoSettings,
+    settings: SettingsSource,
 ) : ViewModel() {
 
     private val showDone = MutableStateFlow(false)
@@ -48,7 +48,7 @@ class PlanViewModel(
         routines.observeRoutines(),
         routines.observeAnchors(),
         showDone,
-        ticker.ticks().map { LogicalDay.of(it, zones.current(), settings.dayStartsAt) }.distinctUntilChanged(),
+        ticker.ticks().map { LogicalDay.of(it, zones.current(), settings.current().dayStartsAt) }.distinctUntilChanged(),
     ) { taskList, routineList, anchors, show, today ->
         val anchorNames = anchors.associate { it.id to it.name }
         PlanUiState(
