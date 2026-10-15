@@ -211,4 +211,39 @@ class TodayViewModelTest : ViewModelTest() {
 
         vm.content { (it.tunnel.firstOrNull() as? TunnelItem.TaskStep)?.step?.title == "abrir o site" }
     }
+
+    @Test
+    fun tunnelDone_tappedTwice_staysDone() = runTest {
+        val taskId = graph.tasks.save(
+            TaskDraft(
+                null,
+                "Fazer IR",
+                pinnedToToday = true,
+                steps = listOf(StepDraft(null, "abrir site", StepEnergy.Low), StepDraft(null, "enviar", StepEnergy.Low)),
+            ),
+        )
+        val vm = viewModel()
+        val item = vm.content { it.tunnel.isNotEmpty() }.tunnel.first()
+
+        vm.tunnelDone(item)
+        vm.tunnelDone(item)
+
+        // Writes are serialized, so once this one lands both taps have landed too.
+        graph.tasks.save(TaskDraft(null, "sentinela"))
+        assertTrue(graph.db.stepDao().forTask(taskId).first().doneAt != null)
+    }
+
+    @Test
+    fun tunnelDone_onARoutineStep_tappedTwice_keepsTheDayLogged() = runTest {
+        val anchorId = lunchRoutine()
+        val vm = viewModel()
+        vm.tapAnchor(anchorId)
+        val item = vm.content { it.tunnel.isNotEmpty() }.tunnel.first()
+
+        vm.tunnelDone(item)
+        vm.tunnelDone(item)
+
+        graph.tasks.save(TaskDraft(null, "sentinela"))
+        assertEquals(1, graph.routines.observeDay(LocalDate(2026, 10, 15)).first().logs.size)
+    }
 }

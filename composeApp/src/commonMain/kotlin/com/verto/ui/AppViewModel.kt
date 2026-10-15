@@ -7,25 +7,40 @@ import com.verto.data.repository.UsageTracker
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+
+/** Checking blocks the lists only on the first open: the spec puts "Que bom te ver" before any of them. */
+enum class FreshStart { Checking, Offer, None }
 
 class AppViewModel(private val usage: UsageTracker, private val reset: ResetRepository) : ViewModel() {
 
-    private val _offerFreshStart = MutableStateFlow(false)
-    val offerFreshStart: StateFlow<Boolean> = _offerFreshStart.asStateFlow()
+    private val _freshStart = MutableStateFlow(FreshStart.Checking)
+    val freshStart: StateFlow<FreshStart> = _freshStart.asStateFlow()
 
     fun onForeground() {
         viewModelScope.launch {
-            if (usage.checkIn()) _offerFreshStart.value = true
+            val offer = usage.checkIn()
+            _freshStart.update { current ->
+                when {
+                    offer -> FreshStart.Offer
+                    current == FreshStart.Offer -> current
+                    else -> FreshStart.None
+                }
+            }
         }
     }
 
     fun startClean() {
-        _offerFreshStart.value = false
-        viewModelScope.launch { reset.freshStart() }
+        _freshStart.value = FreshStart.None
+        viewModelScope.launch {
+            reset.freshStart()
+            usage.answered()
+        }
     }
 
     fun keepAsItWas() {
-        _offerFreshStart.value = false
+        _freshStart.value = FreshStart.None
+        viewModelScope.launch { usage.answered() }
     }
 }

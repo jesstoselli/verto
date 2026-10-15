@@ -153,9 +153,15 @@ class TodayViewModel(
         viewModelScope.launch { tasks.setDone(taskId, true) }
     }
 
-    fun tunnelDone(item: TunnelItem) = when (item) {
-        is TunnelItem.RoutineStep -> toggleRoutineStep(item.step.id)
-        is TunnelItem.TaskStep -> item.step?.let { toggleTaskStep(it.id) } ?: completeTask(item.task.id)
+    // "Feito" is a big button pressed in a hurry: it only checks, a second tap must not undo it.
+    fun tunnelDone(item: TunnelItem) {
+        when (item) {
+            is TunnelItem.RoutineStep -> withDay { routines.checkStep(item.step.id, it) }
+            is TunnelItem.TaskStep -> {
+                val step = item.step
+                if (step == null) completeTask(item.task.id) else viewModelScope.launch { tasks.checkStep(step.id) }
+            }
+        }
     }
 
     fun tunnelOther() {

@@ -11,13 +11,17 @@ class UsageTracker(
     private val clock: Clock,
 ) {
     /**
-     * Called every time the app comes to the front. Records the visit and says whether this one
-     * comes after a long enough absence to offer a clean day; the next call already says no.
+     * Called every time the app comes to the front. Says whether this visit comes after a long
+     * enough absence to offer a clean day. While an offer is pending the visit is not recorded:
+     * if the app is killed or closed before she answers, the next open offers it again.
      */
     suspend fun checkIn(): Boolean {
         val now = clock.now()
-        val last = store.lastOpenedAt()
-        store.setLastOpenedAt(now)
-        return AbsenceRules.shouldOfferFreshStart(last, now, settings.current().absenceThreshold)
+        val offer = AbsenceRules.shouldOfferFreshStart(store.lastOpenedAt(), now, settings.current().absenceThreshold)
+        if (!offer) store.setLastOpenedAt(now)
+        return offer
     }
+
+    /** She chose Reset or "Ver como estava": this return is settled. */
+    suspend fun answered() = store.setLastOpenedAt(clock.now())
 }

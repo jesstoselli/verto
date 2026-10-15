@@ -146,7 +146,12 @@ class RoutineRepository(
     }
 
     /** Checks or unchecks a routine step for [day] and keeps that day's log in step with what is complete. */
-    suspend fun toggleStep(stepId: String, day: LocalDate) {
+    suspend fun toggleStep(stepId: String, day: LocalDate) = setStep(stepId, day, checkOnly = false)
+
+    /** "Feito" in Só 1 coisa: only ever checks, so a second tap cannot undo it. */
+    suspend fun checkStep(stepId: String, day: LocalDate) = setStep(stepId, day, checkOnly = true)
+
+    private suspend fun setStep(stepId: String, day: LocalDate, checkOnly: Boolean) {
         val now = clock.now()
         val nowMs = now.toEpochMilliseconds()
         val zone = zones.current()
@@ -154,6 +159,7 @@ class RoutineRepository(
             val row = stepDao.get(stepId) ?: return@write
             val routineId = row.routineId ?: return@write
             val doneToday = RoutineRules.isDoneOn(row.toDomain(), day, zone, settings.current().dayStartsAt)
+            if (checkOnly && doneToday) return@write
             put(row.copy(doneAt = if (doneToday) null else nowMs, updatedAt = nowMs))
 
             val steps = stepDao.forRoutine(routineId).map { it.toDomain() }

@@ -97,12 +97,18 @@ class TaskRepository(
         update(id) { it.copy(doneAt = if (done) it.doneAt ?: nowMs else null) }
     }
 
-    suspend fun toggleStep(stepId: String) {
+    suspend fun toggleStep(stepId: String) = setStep(stepId, checkOnly = false)
+
+    /** "Feito" in Só 1 coisa: only ever checks, so a second tap cannot undo it. */
+    suspend fun checkStep(stepId: String) = setStep(stepId, checkOnly = true)
+
+    private suspend fun setStep(stepId: String, checkOnly: Boolean) {
         val now = clock.now()
         val nowMs = now.toEpochMilliseconds()
         store.write {
             val step = stepDao.get(stepId) ?: return@write
             val taskId = step.taskId ?: return@write
+            if (checkOnly && step.doneAt != null) return@write
             put(step.copy(doneAt = if (step.doneAt == null) nowMs else null, updatedAt = nowMs))
             val task = taskDao.get(taskId) ?: return@write
             val doneAt = TaskRules.doneAtAfterStepChange(task.toDomain(), stepDao.forTask(taskId).map { it.toDomain() }, now)

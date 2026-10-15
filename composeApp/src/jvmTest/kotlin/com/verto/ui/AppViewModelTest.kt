@@ -3,23 +3,25 @@ package com.verto.ui
 import com.verto.data.repository.TaskDraft
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.yield
 import kotlin.test.Test
-import kotlin.test.assertFalse
+import kotlin.test.assertEquals
 
 class AppViewModelTest : ViewModelTest() {
 
     private fun viewModel() = AppViewModel(graph.usage, graph.reset)
 
     @Test
+    fun startsChecking_soNoListShowsBeforeTheAnswer() {
+        assertEquals(FreshStart.Checking, viewModel().freshStart.value)
+    }
+
+    @Test
     fun firstLaunch_goesStraightToTheApp() = runTest {
         val vm = viewModel()
 
         vm.onForeground()
-        // Wait for the visit to be recorded: a write still running at tearDown would hit a closed database.
-        while (graph.store.lastOpenedAt() == null) yield()
 
-        assertFalse(vm.offerFreshStart.value)
+        vm.freshStart.first { it == FreshStart.None }
     }
 
     @Test
@@ -31,10 +33,10 @@ class AppViewModelTest : ViewModelTest() {
         val vm = viewModel()
 
         vm.onForeground()
-        vm.offerFreshStart.first { it }
+        vm.freshStart.first { it == FreshStart.Offer }
         vm.startClean()
 
-        assertFalse(vm.offerFreshStart.value)
+        assertEquals(FreshStart.None, vm.freshStart.value)
         graph.tasks.observeTasks().first { tasks -> tasks.none { it.pinnedToToday } }
     }
 
@@ -46,11 +48,26 @@ class AppViewModelTest : ViewModelTest() {
         graph.clock.now = uiAt(15, 10)
         val vm = viewModel()
         vm.onForeground()
-        vm.offerFreshStart.first { it }
+        vm.freshStart.first { it == FreshStart.Offer }
 
         vm.keepAsItWas()
 
-        assertFalse(vm.offerFreshStart.value)
+        assertEquals(FreshStart.None, vm.freshStart.value)
         graph.tasks.observeTasks().first { tasks -> tasks.single().pinnedToToday }
+    }
+
+    @Test
+    fun theOffer_survivesTheAppBeingKilledBeforeAnswering() = runTest {
+        graph.clock.now = uiAt(10, 10)
+        graph.usage.checkIn()
+        graph.clock.now = uiAt(15, 10)
+        val before = viewModel()
+        before.onForeground()
+        before.freshStart.first { it == FreshStart.Offer }
+
+        val after = viewModel()
+        after.onForeground()
+
+        after.freshStart.first { it == FreshStart.Offer }
     }
 }
