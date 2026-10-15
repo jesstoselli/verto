@@ -3,6 +3,7 @@ package com.verto.ui.common
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
+import kotlinx.datetime.daysUntil
 import kotlinx.datetime.isoDayNumber
 import kotlinx.datetime.number
 
@@ -66,3 +67,18 @@ fun parseClock(text: String): LocalTime? {
 
 fun Set<DayOfWeek>.label(): String =
     if (size == 7) "todo dia" else weekdayShortNames.filter { it.first in this }.joinToString(" · ") { it.second }
+
+/**
+ * How far away a date is, in the words a time-blind brain uses: "amanhã", "sexta", "em 9 dias".
+ * Within the coming week the weekday is unambiguous; a passed date is just "passou", never "atrasado".
+ */
+fun relativeDay(date: LocalDate, today: LocalDate): String {
+    val days = today.daysUntil(date)
+    return when {
+        days < 0 -> "passou"
+        days == 0 -> "hoje"
+        days == 1 -> "amanhã"
+        days < 7 -> weekdayNames[date.dayOfWeek.isoDayNumber - 1]
+        else -> "em $days dias"
+    }
+}

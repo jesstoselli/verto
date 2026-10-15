@@ -29,8 +29,10 @@ import com.verto.ui.common.ListRow
 import com.verto.ui.common.SectionHeader
 import com.verto.ui.common.hhmm
 import com.verto.ui.common.label
+import com.verto.ui.common.relativeDay
 import com.verto.ui.common.shortPt
 import com.verto.ui.common.softDateLabel
+import kotlinx.datetime.LocalDate
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -50,7 +52,7 @@ fun PlanScreen(
         item { SectionHeader("Tarefas", "Nova tarefa") { onOpenTask(null) } }
         if (state.openTasks.isEmpty()) item { Hint("Nenhuma tarefa aberta.") }
         items(state.openTasks, key = { it.id }) { task ->
-            TaskRow(task, muted = false, onClick = { onOpenTask(task.id) }, onTogglePinned = { viewModel.togglePinned(task) })
+            TaskRow(task, state.today, muted = false, onClick = { onOpenTask(task.id) }, onUnpin = { viewModel.unpin(task) })
         }
         if (state.doneTasks.isNotEmpty()) {
             item {
@@ -58,7 +60,7 @@ fun PlanScreen(
             }
             if (state.showDone) {
                 items(state.doneTasks, key = { "done-${it.id}" }) { task ->
-                    TaskRow(task, muted = true, onClick = { onOpenTask(task.id) }, onTogglePinned = null)
+                    TaskRow(task, state.today, muted = true, onClick = { onOpenTask(task.id) }, onUnpin = null)
                 }
             }
         }
@@ -89,7 +91,7 @@ fun PlanScreen(
 }
 
 @Composable
-private fun TaskRow(task: Task, muted: Boolean, onClick: () -> Unit, onTogglePinned: (() -> Unit)?) {
+private fun TaskRow(task: Task, today: LocalDate?, muted: Boolean, onClick: () -> Unit, onUnpin: (() -> Unit)?) {
     Card(Modifier.fillMaxWidth().clickable(onClick = onClick)) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
@@ -106,8 +108,15 @@ private fun TaskRow(task: Task, muted: Boolean, onClick: () -> Unit, onTogglePin
                     )
                 }
             }
-            if (onTogglePinned != null) {
-                FilterChip(selected = task.pinnedToToday, onClick = onTogglePinned, label = { Text("Hoje") })
+            val due = task.dueDate
+            when {
+                onUnpin == null -> Unit
+                task.pinnedToToday -> FilterChip(selected = true, onClick = onUnpin, label = { Text("Hoje") })
+                due != null && today != null -> Text(
+                    relativeDay(due, today),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         }
     }

@@ -78,4 +78,14 @@ class FormatsTest {
         assertEquals(2, mapping.transformedToOriginal(3))
         assertEquals(4, mapping.transformedToOriginal(5))
     }
+
+    @Test
+    fun relativeDay_saysHowFarAwayWithoutAlarm() {
+        assertEquals("passou", relativeDay(LocalDate(2026, 10, 12), oct15))
+        assertEquals("hoje", relativeDay(oct15, oct15))
+        assertEquals("amanhã", relativeDay(LocalDate(2026, 10, 16), oct15))
+        assertEquals("sábado", relativeDay(LocalDate(2026, 10, 17), oct15))
+        assertEquals("quarta", relativeDay(LocalDate(2026, 10, 21), oct15))
+        assertEquals("em 7 dias", relativeDay(LocalDate(2026, 10, 22), oct15))
+    }
 }
