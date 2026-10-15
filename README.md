@@ -21,3 +21,16 @@ App do Verto (KMP + Compose Multiplatform, Android primeiro). Design: `~/Repos/V
 ~/Library/Android/sdk/emulator/emulator -avd Medium_Phone &
 ./gradlew :androidApp:installDebug
 ```
+
+## Sync
+
+O app sincroniza com a API em `https://verto-api.billfolder.app` (repo `verto-api`). Login em Planejar → ícone de conta → "Conta e sync".
+
+- Toda mudança vai pro Room e pro `outbox` na mesma transação; o sync manda o outbox e depois puxa o que mudou desde o último cursor.
+- Roda ao abrir o app, uns segundos depois de cada mudança, com espera crescente sem rede e de hora em hora pelo WorkManager.
+- Se um registro tem mudança local pendente, a versão do servidor é ignorada até o próximo push.
+- Os tokens ficam em SharedPreferences privadas, fora do backup do Android.
+
+```bash
+./gradlew :shared:data:jvmTest --tests '*Sync*'
+```
