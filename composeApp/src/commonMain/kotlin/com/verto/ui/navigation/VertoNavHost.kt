@@ -6,8 +6,8 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Create
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -34,6 +34,7 @@ import com.verto.ui.editor.RoutineEditorScreen
 import com.verto.ui.editor.TaskEditorScreen
 import com.verto.ui.inbox.InboxScreen
 import com.verto.ui.plan.PlanScreen
+import com.verto.ui.settings.SettingsScreen
 import com.verto.ui.today.TodayScreen
 import kotlin.reflect.KClass
 
@@ -103,7 +104,7 @@ fun VertoNavHost() {
                     onOpenTask = { nav.navigate(TaskEditorRoute(it)) },
                     onOpenRoutine = { nav.navigate(RoutineEditorRoute(routineId = it)) },
                     onOpenAnchor = { nav.navigate(AnchorEditorRoute(it)) },
-                    onOpenAccount = { nav.navigate(AccountRoute) },
+                    onOpenSettings = { nav.navigate(SettingsRoute) },
                 )
             }
             composable<TaskEditorRoute> { backStackEntry ->
@@ -124,6 +125,9 @@ fun VertoNavHost() {
                 AnchorEditorScreen(route.anchorId, onClose = { nav.popBackStack() })
             }
             composable<AccountRoute> { AccountScreen(onClose = { nav.popBackStack() }) }
+            composable<SettingsRoute> {
+                SettingsScreen(onOpenAccount = { nav.navigate(AccountRoute) }, onClose = { nav.popBackStack() })
+            }
         }
     }
 }

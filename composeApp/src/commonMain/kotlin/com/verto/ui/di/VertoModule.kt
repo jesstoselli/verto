@@ -30,6 +30,7 @@ import com.verto.ui.editor.TaskEditorArgs
 import com.verto.ui.editor.TaskEditorViewModel
 import com.verto.ui.inbox.InboxViewModel
 import com.verto.ui.plan.PlanViewModel
+import com.verto.ui.settings.SettingsViewModel
 import com.verto.ui.today.TodayViewModel
 import kotlin.time.Clock
 import kotlinx.coroutines.CoroutineScope
@@ -69,4 +70,5 @@ val vertoModule = module {
     viewModel { (args: RoutineEditorArgs) -> RoutineEditorViewModel(args, get(), get()) }
     viewModelOf(::TodayViewModel)
     viewModelOf(::AppViewModel)
+    viewModelOf(::SettingsViewModel)
 }

@@ -17,7 +17,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -53,7 +53,7 @@ fun PlanScreen(
     onOpenTask: (String?) -> Unit,
     onOpenRoutine: (String?) -> Unit,
     onOpenAnchor: (String?) -> Unit,
-    onOpenAccount: () -> Unit,
+    onOpenSettings: () -> Unit,
     viewModel: PlanViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -69,8 +69,8 @@ fun PlanScreen(
                 subtitle = "Organiza o caminho sem cobrar o hoje.",
                 action = {
                     Surface(shape = CircleShape, color = MaterialTheme.colorScheme.surfaceContainerHigh) {
-                        IconButton(onClick = onOpenAccount) {
-                            Icon(Icons.Filled.AccountCircle, contentDescription = "Conta e sync")
+                        IconButton(onClick = onOpenSettings) {
+                            Icon(Icons.Filled.Settings, contentDescription = "Ajustes")
                         }
                     }
                 },

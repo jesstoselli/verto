@@ -22,3 +22,6 @@ data class AnchorEditorRoute(val anchorId: String? = null)
 
 @Serializable
 data object AccountRoute
+
+@Serializable
+data object SettingsRoute
