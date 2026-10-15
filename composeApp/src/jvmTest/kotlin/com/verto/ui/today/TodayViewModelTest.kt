@@ -4,20 +4,21 @@ import com.verto.data.ZoneProvider
 import com.verto.data.repository.AnchorDraft
 import com.verto.data.repository.RoutineDraft
 import com.verto.data.repository.StepDraft
+import com.verto.data.repository.TaskDraft
 import com.verto.domain.model.EnergyLevel
 import com.verto.domain.model.Plan
 import com.verto.domain.model.StepEnergy
 import com.verto.ui.TestZone
 import com.verto.ui.ViewModelTest
 import com.verto.ui.uiAt
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class TodayViewModelTest : ViewModelTest() {
 
@@ -60,13 +61,13 @@ class TodayViewModelTest : ViewModelTest() {
     }
 
     @Test
-    fun cycleEnergy_movesFromTheNeutralDefault() = runTest {
+    fun setEnergy_storesTheChosenLevel() = runTest {
         val vm = viewModel()
         assertEquals(EnergyLevel.Medium, vm.content().today.energy)
 
-        vm.cycleEnergy()
+        vm.setEnergy(EnergyLevel.Low)
 
-        vm.content { it.today.energy == EnergyLevel.High }
+        vm.content { it.today.energy == EnergyLevel.Low }
     }
 
     @Test
@@ -123,5 +124,24 @@ class TodayViewModelTest : ViewModelTest() {
         vm.onResume()
 
         vm.content { it.today.day == LocalDate(2026, 10, 16) }
+    }
+
+    @Test
+    fun completeTask_withOpenSteps_movesItToRecentlyDone() = runTest {
+        val id = graph.tasks.save(
+            TaskDraft(
+                null,
+                "encher lava-louças",
+                pinnedToToday = true,
+                steps = listOf(StepDraft(null, "copos", StepEnergy.Low), StepDraft(null, "pratos", StepEnergy.Low)),
+            ),
+        )
+        val vm = viewModel()
+        vm.content { it.today.pinned.isNotEmpty() }
+
+        vm.completeTask(id)
+
+        val after = vm.content { it.today.pinned.isEmpty() }
+        assertEquals(listOf(id), after.today.recentlyDone.map { it.id })
     }
 }

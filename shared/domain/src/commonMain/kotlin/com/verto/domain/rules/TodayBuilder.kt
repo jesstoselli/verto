@@ -12,6 +12,7 @@ import com.verto.domain.model.RoutineOutcome
 import com.verto.domain.model.Step
 import com.verto.domain.model.StepOwner
 import com.verto.domain.model.Task
+import kotlin.time.Instant
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -28,6 +29,7 @@ data class TodayInput(
     val logs: List<RoutineLog>,
     val events: List<AnchorEvent>,
     val tasks: List<Task>,
+    val now: Instant,
 )
 
 data class StepState(val step: Step, val done: Boolean)
@@ -63,6 +65,8 @@ data class Today(
     val pinned: List<TaskCard>,
     val pinnedOverSoftLimit: Boolean,
     val deadlines: List<TaskCard>,
+    /** Finished lately, newest first: a quiet "you did these", never a tally. */
+    val recentlyDone: List<Task>,
 )
 
 /** "Hoje" is derived on every change, never stored, so there is no backlog to pile up. */
@@ -109,6 +113,9 @@ object TodayBuilder {
                 !task.pinnedToToday && task.dueKind == DueKind.Hard && task.dueDate?.let { it <= horizon } == true
             }
             .sortedBy { it.dueDate }
+        val recentlyDone = input.tasks
+            .filter { task -> task.doneAt?.let { input.now - it <= input.settings.recentlyDoneWindow } == true }
+            .sortedByDescending { it.doneAt }
 
         return Today(
             day = input.day,
@@ -118,6 +125,7 @@ object TodayBuilder {
             pinned = pinned.map { card(it, input.steps) },
             pinnedOverSoftLimit = pinned.size > input.settings.pinnedSoftLimit,
             deadlines = deadlines.map { card(it, input.steps) },
+            recentlyDone = recentlyDone,
         )
     }
 

@@ -9,12 +9,6 @@ fun EnergyLevel.label(): String = when (this) {
     EnergyLevel.High -> "alta"
 }
 
-fun EnergyLevel.next(): EnergyLevel = when (this) {
-    EnergyLevel.Low -> EnergyLevel.Medium
-    EnergyLevel.Medium -> EnergyLevel.High
-    EnergyLevel.High -> EnergyLevel.Low
-}
-
 fun StepEnergy.label(): String = when (this) {
     StepEnergy.Low -> "leve"
     StepEnergy.Medium -> "média"

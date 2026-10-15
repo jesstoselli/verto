@@ -20,13 +20,13 @@ import com.verto.domain.routine
 import com.verto.domain.routineStep
 import com.verto.domain.task
 import com.verto.domain.taskStep
-import kotlinx.datetime.DayOfWeek
-import kotlinx.datetime.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.datetime.DayOfWeek
+import kotlinx.datetime.LocalDate
 
 class TodayBuilderTest {
 
@@ -39,7 +39,7 @@ class TodayBuilderTest {
         events: List<AnchorEvent> = emptyList(),
         tasks: List<Task> = emptyList(),
     ) = TodayBuilder.build(
-        TodayInput(Oct15, SaoPaulo, VertoSettings(), energy, anchors, routines, steps, logs, events, tasks),
+        TodayInput(Oct15, SaoPaulo, VertoSettings(), energy, anchors, routines, steps, logs, events, tasks, now = at(15, 10)),
     )
 
     @Test
@@ -177,5 +177,19 @@ class TodayBuilderTest {
 
         assertEquals(listOf("wakeup", "bedtime"), today.sections.map { it.anchor.id })
         assertEquals("wakeup", today.expandedAnchorId)
+    }
+
+    @Test
+    fun recentlyDone_keepsTheLast48Hours_newestFirst() {
+        val today = build(
+            tasks = listOf(
+                task("yesterday", doneAt = at(14, 9)),
+                task("thisMorning", doneAt = at(15, 8)),
+                task("tooOld", doneAt = at(13, 9)),
+                task("open"),
+            ),
+        )
+
+        assertEquals(listOf("thisMorning", "yesterday"), today.recentlyDone.map { it.id })
     }
 }

@@ -77,6 +77,10 @@ private val DarkColors = darkColorScheme(
     outlineVariant = Color(0xFF3A3E5C),
 )
 
+/** The betta pink, same in both themes: it marks the day's energy, the one control that sets the tone. */
+val EnergyPink = Color(0xFFFEC4C6)
+val OnEnergyPink = Color(0xFF4A1A1E)
+
 @Composable
 fun VertoTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
     val base = Typography()

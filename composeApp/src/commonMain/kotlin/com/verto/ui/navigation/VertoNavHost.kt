@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -34,7 +34,7 @@ import kotlin.reflect.KClass
 
 private enum class Tab(val route: Any, val routeClass: KClass<*>, val label: String, val icon: ImageVector) {
     Today(TodayRoute, TodayRoute::class, "Hoje", Icons.Filled.Home),
-    Inbox(InboxRoute, InboxRoute::class, "Inbox", Icons.Filled.Email),
+    Inbox(InboxRoute, InboxRoute::class, "Caçamba", Icons.Filled.Delete),
     Plan(PlanRoute, PlanRoute::class, "Planejar", Icons.AutoMirrored.Filled.List),
 }
 
@@ -79,7 +79,7 @@ fun VertoNavHost() {
             popEnterTransition = { EnterTransition.None },
             popExitTransition = { ExitTransition.None },
         ) {
-            composable<TodayRoute> { TodayScreen() }
+            composable<TodayRoute> { TodayScreen(onOpenTask = { nav.navigate(TaskEditorRoute(it)) }) }
             composable<InboxRoute> {
                 InboxScreen(onMakeRoutine = { inboxId -> nav.navigate(RoutineEditorRoute(fromInboxId = inboxId)) })
             }

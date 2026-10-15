@@ -14,7 +14,6 @@ import com.verto.domain.rules.Today
 import com.verto.domain.rules.TodayBuilder
 import com.verto.domain.rules.TodayInput
 import com.verto.ui.common.Ticker
-import com.verto.ui.common.next
 import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -24,7 +23,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
@@ -59,9 +57,13 @@ class TodayViewModel(
 
     // The ticker's delay pauses while the phone sleeps, so a wake-up or a tap must not wait for its next tick.
     private val nudges = MutableSharedFlow<Instant>(extraBufferCapacity = 1)
+    private val lastTick = MutableStateFlow(clock.now())
 
     private val currentDay: StateFlow<LocalDate?> = merge(ticker.ticks(), nudges)
-        .onEach { routines.recordOpenedWindows(dayOf(it)) }
+        .onEach {
+            lastTick.value = it
+            routines.recordOpenedWindows(dayOf(it))
+        }
         .map { dayOf(it) }
         .distinctUntilChanged()
         .onEach {
@@ -77,8 +79,8 @@ class TodayViewModel(
             tasks.observeTasks(),
             tasks.observeAllSteps(),
             days.observeEnergy(day),
-            combine(shownPlans, expandedOverride) { plans, expanded -> plans to expanded },
-        ) { routineDay, taskList, steps, energy, (plans, expanded) ->
+            combine(shownPlans, expandedOverride, lastTick, ::Triple),
+        ) { routineDay, taskList, steps, energy, (plans, expanded, now) ->
             val today = TodayBuilder.build(
                 TodayInput(
                     day = day,
@@ -91,15 +93,14 @@ class TodayViewModel(
                     logs = routineDay.logs,
                     events = routineDay.events,
                     tasks = taskList,
+                    now = now,
                 ),
             )
             TodayUiState.Content(today, plans, expanded ?: setOfNotNull(today.expandedAnchorId))
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), TodayUiState.Loading)
 
-    fun cycleEnergy() = withDay { day ->
-        days.setEnergy(day, (days.observeEnergy(day).first() ?: EnergyLevel.Medium).next())
-    }
+    fun setEnergy(level: EnergyLevel) = withDay { days.setEnergy(it, level) }
 
     fun onResume() {
         nudges.tryEmit(clock.now())
