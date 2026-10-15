@@ -84,6 +84,10 @@ class LocalStore(val db: VertoDatabase) {
 
     suspend fun setLastSyncedAt(at: Instant) = db.syncStateDao().put(SyncStateEntity(LAST_SYNCED_AT, at.toString()))
 
+    suspend fun lastOpenedAt(): Instant? = db.syncStateDao().get(LAST_OPENED_AT)?.let { Instant.parse(it) }
+
+    suspend fun setLastOpenedAt(at: Instant) = db.syncStateDao().put(SyncStateEntity(LAST_OPENED_AT, at.toString()))
+
     private suspend fun upsertQuietly(row: Any?) {
         when (row) {
             is InboxItemEntity -> db.inboxDao().upsert(row)
@@ -119,6 +123,7 @@ class LocalStore(val db: VertoDatabase) {
         const val CURSOR = "pull_cursor"
         const val LAST_SYNCED_AT = "last_synced_at"
         const val PARKED = "parked_changes"
+        const val LAST_OPENED_AT = "last_opened_at"
     }
 }
 

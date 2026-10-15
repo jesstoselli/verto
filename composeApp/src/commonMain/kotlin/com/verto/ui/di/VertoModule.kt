@@ -8,8 +8,11 @@ import com.verto.data.remote.AuthSession
 import com.verto.data.remote.VertoApi
 import com.verto.data.repository.DayRepository
 import com.verto.data.repository.InboxRepository
+import com.verto.data.repository.ResetRepository
 import com.verto.data.repository.RoutineRepository
+import com.verto.data.repository.StepRepository
 import com.verto.data.repository.TaskRepository
+import com.verto.data.repository.UsageTracker
 import com.verto.data.settings.SettingsRepository
 import com.verto.data.sync.LocalStore
 import com.verto.data.sync.SyncEngine
@@ -49,6 +52,9 @@ val vertoModule = module {
     singleOf(::TaskRepository)
     singleOf(::RoutineRepository)
     singleOf(::DayRepository)
+    singleOf(::StepRepository)
+    singleOf(::ResetRepository)
+    singleOf(::UsageTracker)
     single { VertoApi(get()) }
     single { AuthSession(get(), get()) }
     single { SyncEngine(get(), get(), get(), get()) }

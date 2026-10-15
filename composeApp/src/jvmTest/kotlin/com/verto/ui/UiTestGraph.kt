@@ -4,12 +4,19 @@ import com.verto.data.IdGenerator
 import com.verto.data.db.inMemoryVertoDatabase
 import com.verto.data.repository.DayRepository
 import com.verto.data.repository.InboxRepository
+import com.verto.data.repository.ResetRepository
 import com.verto.data.repository.RoutineRepository
+import com.verto.data.repository.StepRepository
 import com.verto.data.repository.TaskRepository
-import com.verto.data.sync.LocalStore
+import com.verto.data.repository.UsageTracker
 import com.verto.data.settings.InMemorySettingsStore
 import com.verto.data.settings.SettingsRepository
+import com.verto.data.sync.LocalStore
 import com.verto.ui.common.Ticker
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.time.Clock
+import kotlin.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,10 +26,6 @@ import kotlinx.coroutines.test.setMain
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
-import kotlin.test.AfterTest
-import kotlin.test.BeforeTest
-import kotlin.time.Clock
-import kotlin.time.Instant
 
 class TestClock(var now: Instant) : Clock {
     override fun now(): Instant = now
@@ -54,6 +57,9 @@ class UiTestGraph(start: Instant = uiAt(15, 10)) {
     val tasks = TaskRepository(store, clock, ids)
     val routines = RoutineRepository(store, clock, ids, { TestZone }, settings)
     val days = DayRepository(store, clock, ids)
+    val steps = StepRepository(store, clock, ids)
+    val reset = ResetRepository(store, clock)
+    val usage = UsageTracker(store, settings, clock)
 
     /** Moves both the repositories' clock and the screen's ticker. */
     fun advanceTo(instant: Instant) {

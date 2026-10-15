@@ -3,15 +3,18 @@ package com.verto.data
 import com.verto.data.db.inMemoryVertoDatabase
 import com.verto.data.repository.DayRepository
 import com.verto.data.repository.InboxRepository
+import com.verto.data.repository.ResetRepository
 import com.verto.data.repository.RoutineRepository
+import com.verto.data.repository.StepRepository
 import com.verto.data.repository.TaskRepository
+import com.verto.data.repository.UsageTracker
 import com.verto.data.sync.LocalStore
 import com.verto.domain.VertoSettings
+import kotlin.time.Clock
+import kotlin.time.Instant
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
-import kotlin.time.Clock
-import kotlin.time.Instant
 
 class TestClock(var now: Instant) : Clock {
     override fun now(): Instant = now
@@ -37,4 +40,7 @@ class DataGraph(start: Instant = localAt(15, 10)) {
     val tasks = TaskRepository(store, clock, ids)
     val routines = RoutineRepository(store, clock, ids, { TestZone }, { settings })
     val days = DayRepository(store, clock, ids)
+    val steps = StepRepository(store, clock, ids)
+    val reset = ResetRepository(store, clock)
+    val usage = UsageTracker(store, { settings }, clock)
 }

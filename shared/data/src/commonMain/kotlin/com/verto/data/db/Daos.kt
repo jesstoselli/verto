@@ -27,6 +27,9 @@ interface TaskDao {
     @Query("SELECT * FROM tasks WHERE deletedAt IS NULL ORDER BY title COLLATE NOCASE")
     fun observeActive(): Flow<List<TaskEntity>>
 
+    @Query("SELECT * FROM tasks WHERE deletedAt IS NULL")
+    suspend fun active(): List<TaskEntity>
+
     @Query("SELECT * FROM tasks WHERE id = :id")
     suspend fun get(id: String): TaskEntity?
 
