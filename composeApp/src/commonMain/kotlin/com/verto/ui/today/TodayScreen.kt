@@ -90,33 +90,21 @@ fun TodayScreen(onOpenTask: (String) -> Unit, viewModel: TodayViewModel = koinVi
     val content = state as? TodayUiState.Content ?: return
     val today = content.today
 
-    val routineFocus = today.sections.asSequence().flatMap { section ->
-        section.routines.asSequence().mapNotNull { card ->
-            val plan = content.shownPlans[card.routine.id] ?: card.suggestedPlan
-            card.steps(plan).firstOrNull { !it.done }?.step?.let { step ->
-                FocusItem(
-                    title = step.title,
-                    context = "${section.anchor.name} · ${card.routine.name}",
-                    energy = step.energy,
-                    onComplete = { viewModel.toggleRoutineStep(step.id) },
-                )
-            }
-        }
-    }.firstOrNull()
-    val taskFocus = (today.pinned.asSequence() + today.deadlines.asSequence()).firstOrNull()?.let { card ->
-        val step = card.nextStep
-        FocusItem(
-            title = step?.title ?: card.task.title,
-            context = card.task.title.takeIf { step != null } ?: "Tarefa de hoje",
-            energy = step?.energy,
-            onComplete = if (step != null) {
-                { viewModel.toggleTaskStep(step.id) }
-            } else {
-                { viewModel.completeTask(card.task.id) }
-            },
+    val tunnelItem = content.tunnel.firstOrNull()
+    val focus = tunnelItem?.let {
+        FocusItem(title = it.title(), context = it.context(), energy = it.energy(), onComplete = { viewModel.tunnelDone(it) })
+    }
+    var tunnelOpen by rememberSaveable { mutableStateOf(false) }
+    if (tunnelOpen) {
+        TunnelOverlay(
+            item = tunnelItem,
+            canSkip = content.tunnel.size > 1,
+            onDone = viewModel::tunnelDone,
+            onOther = viewModel::tunnelOther,
+            onSplit = viewModel::splitStep,
+            onExit = { tunnelOpen = false },
         )
     }
-    val focus = routineFocus ?: taskFocus
 
     LazyColumn(
         modifier = Modifier.fillMaxSize().statusBarsPadding(),
@@ -132,7 +120,7 @@ fun TodayScreen(onOpenTask: (String) -> Unit, viewModel: TodayViewModel = koinVi
         }
 
         if (focus != null) {
-            item { FocusCard(focus) }
+            item { FocusCard(focus, onOpen = { tunnelOpen = true }) }
         }
 
         if (today.sections.isNotEmpty()) {
@@ -222,8 +210,9 @@ private fun EnergyPicker(energy: EnergyLevel, onPick: (EnergyLevel) -> Unit) {
 }
 
 @Composable
-private fun FocusCard(focus: FocusItem) {
+private fun FocusCard(focus: FocusItem, onOpen: () -> Unit) {
     Surface(
+        onClick = onOpen,
         modifier = Modifier.fillMaxWidth(),
         color = MaterialTheme.colorScheme.secondaryContainer,
         contentColor = MaterialTheme.colorScheme.onSecondaryContainer,

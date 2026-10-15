@@ -8,6 +8,7 @@ import com.verto.data.repository.TaskDraft
 import com.verto.domain.model.EnergyLevel
 import com.verto.domain.model.Plan
 import com.verto.domain.model.StepEnergy
+import com.verto.domain.rules.TunnelItem
 import com.verto.ui.TestZone
 import com.verto.ui.ViewModelTest
 import com.verto.ui.uiAt
@@ -30,6 +31,7 @@ class TodayViewModelTest : ViewModelTest() {
         ZoneProvider { TestZone },
         graph.settings,
         graph.clock,
+        graph.steps,
     )
 
     private suspend fun lunchRoutine(): String {
@@ -155,5 +157,56 @@ class TodayViewModelTest : ViewModelTest() {
         vm.onResume()
 
         vm.content { it.today.day == LocalDate(2026, 10, 16) }
+    }
+
+    @Test
+    fun tunnel_startsWithTheStepOfTheAnchorThatFired() = runTest {
+        val anchorId = lunchRoutine()
+        val vm = viewModel()
+        vm.tapAnchor(anchorId)
+
+        val first = vm.content { it.tunnel.isNotEmpty() }.tunnel.first()
+
+        assertEquals("20 min de caminhada", (first as TunnelItem.RoutineStep).step.title)
+    }
+
+    @Test
+    fun tunnelOther_movesOn_andComesBackAround() = runTest {
+        val anchorId = lunchRoutine()
+        graph.tasks.save(TaskDraft(null, "ligar pro dentista", pinnedToToday = true))
+        val vm = viewModel()
+        vm.tapAnchor(anchorId)
+        vm.content { it.tunnel.size == 2 }
+
+        vm.tunnelOther()
+        val second = vm.content { it.tunnel.first() is TunnelItem.TaskStep }
+        assertEquals(1, second.tunnel.size)
+
+        vm.tunnelOther()
+        vm.content { it.tunnel.first() is TunnelItem.RoutineStep && it.tunnel.size == 2 }
+    }
+
+    @Test
+    fun tunnelDone_onATaskWithoutSteps_finishesIt() = runTest {
+        graph.tasks.save(TaskDraft(null, "ligar pro dentista", pinnedToToday = true))
+        val vm = viewModel()
+        val item = vm.content { it.tunnel.isNotEmpty() }.tunnel.single()
+
+        vm.tunnelDone(item)
+
+        vm.content { it.tunnel.isEmpty() && it.today.recentlyDone.isNotEmpty() }
+    }
+
+    @Test
+    fun splitStep_putsTheFirstPieceInFront() = runTest {
+        graph.tasks.save(
+            TaskDraft(null, "Fazer IR", pinnedToToday = true, steps = listOf(StepDraft(null, "fazer tudo", StepEnergy.Low))),
+        )
+        val vm = viewModel()
+        val item = vm.content { it.tunnel.isNotEmpty() }.tunnel.single() as TunnelItem.TaskStep
+
+        vm.splitStep(item.step!!.id, listOf("abrir o site", "baixar o programa"))
+
+        vm.content { (it.tunnel.firstOrNull() as? TunnelItem.TaskStep)?.step?.title == "abrir o site" }
     }
 }
