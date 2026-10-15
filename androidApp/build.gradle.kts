@@ -27,4 +27,7 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.koin.bom))
     implementation(libs.koin.android)
+    implementation(libs.ktor.client.okhttp)
+    implementation(libs.androidx.work.runtime)
+    implementation(libs.kotlinx.serialization.json)
 }
