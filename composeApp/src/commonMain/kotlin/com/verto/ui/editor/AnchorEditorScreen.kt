@@ -16,9 +16,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.verto.ui.common.EditorSection
 import com.verto.ui.common.ClockMask
 import com.verto.ui.common.EditorScaffold
-import com.verto.ui.common.Hint
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -33,37 +33,45 @@ fun AnchorEditorScreen(
 
     EditorScaffold(title = if (state.id == null) "Nova âncora" else "Âncora", onBack = onClose) {
         if (!state.loaded) return@EditorScaffold
-        Hint("Um momento do seu dia que puxa as rotinas, tipo \"Acordei\" ou \"Cheguei em casa\".")
-        OutlinedTextField(
-            value = state.name,
-            onValueChange = viewModel::setName,
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text("Nome") },
-            singleLine = true,
-        )
-        Text("Janela de horário", style = MaterialTheme.typography.titleSmall)
-        Hint("Se você não tocar na âncora, ela dispara sozinha quando a janela abre.")
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        EditorSection(
+            title = "Um momento do dia",
+            hint = "A âncora puxa suas rotinas, como “Acordei” ou “Cheguei em casa”.",
+        ) {
             OutlinedTextField(
-                state.start,
-                viewModel::setStart,
-                Modifier.weight(1f),
-                label = { Text("De") },
-                placeholder = { Text("12:00") },
+                value = state.name,
+                onValueChange = viewModel::setName,
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text("Nome") },
                 singleLine = true,
-                visualTransformation = ClockMask,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             )
-            OutlinedTextField(
-                state.end,
-                viewModel::setEnd,
-                Modifier.weight(1f),
-                label = { Text("Até") },
-                placeholder = { Text("14:00") },
-                singleLine = true,
-                visualTransformation = ClockMask,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            Text("Janela de horário", style = MaterialTheme.typography.titleSmall)
+            Text(
+                "Se você não tocar na âncora, ela dispara quando a janela abre.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedTextField(
+                    state.start,
+                    viewModel::setStart,
+                    Modifier.weight(1f),
+                    label = { Text("De") },
+                    placeholder = { Text("12:00") },
+                    singleLine = true,
+                    visualTransformation = ClockMask,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                )
+                OutlinedTextField(
+                    state.end,
+                    viewModel::setEnd,
+                    Modifier.weight(1f),
+                    label = { Text("Até") },
+                    placeholder = { Text("14:00") },
+                    singleLine = true,
+                    visualTransformation = ClockMask,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                )
+            }
         }
         state.message?.let { Text(it, color = MaterialTheme.colorScheme.error) }
         Button(onClick = viewModel::save, modifier = Modifier.fillMaxWidth()) { Text("Salvar") }

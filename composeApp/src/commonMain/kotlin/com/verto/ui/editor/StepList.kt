@@ -1,8 +1,13 @@
 package com.verto.ui.editor
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -10,7 +15,9 @@ import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -61,32 +68,48 @@ fun StepListEditor(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         steps.forEachIndexed { index, step ->
-            Column {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                color = MaterialTheme.colorScheme.surfaceContainer,
+                shape = MaterialTheme.shapes.medium,
+            ) {
+                Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Surface(
+                            modifier = Modifier.size(30.dp),
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.primaryContainer,
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text("${index + 1}", style = MaterialTheme.typography.labelLarge)
+                            }
+                        }
+                        Text("Passo ${index + 1}", Modifier.weight(1f).padding(start = 10.dp), style = MaterialTheme.typography.titleSmall)
+                        IconButton(onClick = { onMove(step.key, -1) }, enabled = index > 0) {
+                            Icon(Icons.Filled.KeyboardArrowUp, contentDescription = "Subir")
+                        }
+                        IconButton(onClick = { onMove(step.key, 1) }, enabled = index < steps.lastIndex) {
+                            Icon(Icons.Filled.KeyboardArrowDown, contentDescription = "Descer")
+                        }
+                        IconButton(onClick = { onRemove(step.key) }) {
+                            Icon(Icons.Filled.Close, contentDescription = "Remover")
+                        }
+                    }
                     OutlinedTextField(
                         value = step.title,
                         onValueChange = { onTitle(step.key, it) },
-                        modifier = Modifier.weight(1f),
-                        placeholder = { Text("Passo ${index + 1}") },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text("O que fazer") },
                         singleLine = true,
                     )
-                    IconButton(onClick = { onMove(step.key, -1) }, enabled = index > 0) {
-                        Icon(Icons.Filled.KeyboardArrowUp, contentDescription = "Subir")
-                    }
-                    IconButton(onClick = { onMove(step.key, 1) }, enabled = index < steps.lastIndex) {
-                        Icon(Icons.Filled.KeyboardArrowDown, contentDescription = "Descer")
-                    }
-                    IconButton(onClick = { onRemove(step.key) }) {
-                        Icon(Icons.Filled.Close, contentDescription = "Remover")
-                    }
-                }
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    StepEnergy.entries.forEach { energy ->
-                        FilterChip(
-                            selected = step.energy == energy,
-                            onClick = { onEnergy(step.key, energy) },
-                            label = { Text(energy.label()) },
-                        )
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        StepEnergy.entries.forEach { energy ->
+                            FilterChip(
+                                selected = step.energy == energy,
+                                onClick = { onEnergy(step.key, energy) },
+                                label = { Text(energy.label()) },
+                            )
+                        }
                     }
                 }
             }

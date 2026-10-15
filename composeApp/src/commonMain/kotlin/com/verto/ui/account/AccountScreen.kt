@@ -15,6 +15,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.verto.data.remote.AccountState
+import com.verto.ui.common.EditorSection
 import com.verto.ui.common.EditorScaffold
 import com.verto.ui.common.Hint
 import org.koin.compose.viewmodel.koinViewModel
@@ -24,34 +25,40 @@ fun AccountScreen(onClose: () -> Unit, viewModel: AccountViewModel = koinViewMod
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     EditorScaffold(title = "Conta e sync", onBack = onClose) {
-        Text(state.syncLine, style = MaterialTheme.typography.bodyLarge)
+        EditorSection(title = "Sincronização") {
+            Text(state.syncLine, style = MaterialTheme.typography.bodyLarge)
+        }
         when (val account = state.account) {
             is AccountState.SignedIn -> {
-                Text(account.email, style = MaterialTheme.typography.titleMedium)
-                OutlinedButton(onClick = viewModel::syncNow, modifier = Modifier.fillMaxWidth()) { Text("Sincronizar agora") }
-                TextButton(onClick = viewModel::logout) { Text("Sair desta conta") }
-                Hint("Sair não apaga nada deste celular.")
+                EditorSection(title = "Sua conta") {
+                    Text(account.email, style = MaterialTheme.typography.titleMedium)
+                    OutlinedButton(onClick = viewModel::syncNow, modifier = Modifier.fillMaxWidth()) { Text("Sincronizar agora") }
+                    TextButton(onClick = viewModel::logout) { Text("Sair desta conta") }
+                    Hint("Sair não apaga nada deste celular.")
+                }
             }
             else -> {
-                OutlinedTextField(
-                    value = state.email,
-                    onValueChange = viewModel::setEmail,
-                    modifier = Modifier.fillMaxWidth(),
-                    label = { Text("E-mail") },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                )
-                OutlinedTextField(
-                    value = state.password,
-                    onValueChange = viewModel::setPassword,
-                    modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Senha") },
-                    singleLine = true,
-                    visualTransformation = PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                )
-                Button(onClick = viewModel::login, enabled = !state.busy, modifier = Modifier.fillMaxWidth()) { Text("Entrar") }
-                state.message?.let { Hint(it) }
+                EditorSection(title = "Entrar", hint = "Leva seu Verto com você entre os dispositivos.") {
+                    OutlinedTextField(
+                        value = state.email,
+                        onValueChange = viewModel::setEmail,
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text("E-mail") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                    )
+                    OutlinedTextField(
+                        value = state.password,
+                        onValueChange = viewModel::setPassword,
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text("Senha") },
+                        singleLine = true,
+                        visualTransformation = PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    )
+                    Button(onClick = viewModel::login, enabled = !state.busy, modifier = Modifier.fillMaxWidth()) { Text("Entrar") }
+                    state.message?.let { Hint(it) }
+                }
             }
         }
     }

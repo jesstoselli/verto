@@ -6,17 +6,21 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Create
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
@@ -35,7 +39,7 @@ import kotlin.reflect.KClass
 
 private enum class Tab(val route: Any, val routeClass: KClass<*>, val label: String, val icon: ImageVector) {
     Today(TodayRoute, TodayRoute::class, "Hoje", Icons.Filled.Home),
-    Inbox(InboxRoute, InboxRoute::class, "Caçamba", Icons.Filled.Delete),
+    Inbox(InboxRoute, InboxRoute::class, "Caçamba", Icons.Filled.Create),
     Plan(PlanRoute, PlanRoute::class, "Planejar", Icons.AutoMirrored.Filled.List),
 }
 
@@ -51,7 +55,10 @@ fun VertoNavHost() {
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
             if (showTabs) {
-                NavigationBar {
+                NavigationBar(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                    tonalElevation = 0.dp,
+                ) {
                     Tab.entries.forEach { tab ->
                         NavigationBarItem(
                             selected = destination?.hasRoute(tab.routeClass) == true,
@@ -64,6 +71,13 @@ fun VertoNavHost() {
                             },
                             icon = { Icon(tab.icon, contentDescription = null) },
                             label = { Text(tab.label) },
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = MaterialTheme.colorScheme.secondary,
+                                selectedTextColor = MaterialTheme.colorScheme.secondary,
+                                indicatorColor = Color.Transparent,
+                                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            ),
                         )
                     }
                 }

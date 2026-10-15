@@ -25,8 +25,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.verto.domain.model.DueKind
+import com.verto.ui.common.EditorSection
 import com.verto.ui.common.EditorScaffold
-import com.verto.ui.common.Hint
 import com.verto.ui.common.shortPt
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -48,46 +48,49 @@ fun TaskEditorScreen(
 
     EditorScaffold(title = if (state.id == null) "Nova tarefa" else "Tarefa", onBack = onClose) {
         if (!state.loaded) return@EditorScaffold
-        OutlinedTextField(
-            value = state.title,
-            onValueChange = viewModel::setTitle,
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text("O que é") },
-            singleLine = true,
-        )
-        OutlinedTextField(
-            value = state.notes,
-            onValueChange = viewModel::setNotes,
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text("Notas (opcional)") },
-            minLines = 2,
-        )
-        FilterChip(selected = state.pinned, onClick = { viewModel.setPinned(!state.pinned) }, label = { Text("Pra hoje") })
+        EditorSection(title = "A tarefa") {
+            OutlinedTextField(
+                value = state.title,
+                onValueChange = viewModel::setTitle,
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text("O que é") },
+                singleLine = true,
+            )
+            OutlinedTextField(
+                value = state.notes,
+                onValueChange = viewModel::setNotes,
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text("Notas (opcional)") },
+                minLines = 2,
+            )
+            FilterChip(selected = state.pinned, onClick = { viewModel.setPinned(!state.pinned) }, label = { Text("Pra hoje") })
+        }
 
-        Text("Data", style = MaterialTheme.typography.titleSmall)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            AssistChip(onClick = { pickingDate = true }, label = { Text(state.dueDate?.shortPt() ?: "Escolher data") })
+        EditorSection(title = "Quando", hint = "Prazo real chama atenção. Data flexível não vira cobrança.") {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                AssistChip(onClick = { pickingDate = true }, label = { Text(state.dueDate?.shortPt() ?: "Escolher data") })
+                if (state.dueDate != null) {
+                    TextButton(onClick = { viewModel.setDueDate(null) }) { Text("Sem data") }
+                }
+            }
             if (state.dueDate != null) {
-                TextButton(onClick = { viewModel.setDueDate(null) }) { Text("Sem data") }
-            }
-        }
-        if (state.dueDate != null) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                FilterChip(state.dueKind == DueKind.Hard, { viewModel.setDueKind(DueKind.Hard) }, label = { Text("Prazo real") })
-                FilterChip(state.dueKind == DueKind.Soft, { viewModel.setDueKind(DueKind.Soft) }, label = { Text("Seria bom até") })
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FilterChip(state.dueKind == DueKind.Hard, { viewModel.setDueKind(DueKind.Hard) }, label = { Text("Prazo real") })
+                    FilterChip(state.dueKind == DueKind.Soft, { viewModel.setDueKind(DueKind.Soft) }, label = { Text("Seria bom até") })
+                }
             }
         }
 
-        Text("Passos", style = MaterialTheme.typography.titleSmall)
-        Hint("Quebra até o menor passo possível. Ex.: \"abrir o site da Receita\".")
-        StepListEditor(
-            steps = state.steps,
-            onAdd = viewModel::addStep,
-            onTitle = viewModel::setStepTitle,
-            onEnergy = viewModel::setStepEnergy,
-            onMove = viewModel::moveStep,
-            onRemove = viewModel::removeStep,
-        )
+        EditorSection(title = "Passos", hint = "Quebra até o menor movimento possível, como “abrir o site da Receita”.") {
+            StepListEditor(
+                steps = state.steps,
+                onAdd = viewModel::addStep,
+                onTitle = viewModel::setStepTitle,
+                onEnergy = viewModel::setStepEnergy,
+                onMove = viewModel::moveStep,
+                onRemove = viewModel::removeStep,
+            )
+        }
 
         Button(onClick = viewModel::save, enabled = state.canSave, modifier = Modifier.fillMaxWidth()) { Text("Salvar") }
         if (state.id != null) {

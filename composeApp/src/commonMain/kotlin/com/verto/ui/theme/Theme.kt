@@ -1,92 +1,145 @@
 package com.verto.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Shapes
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-// Betta palette (#FEC4C6, #E8A2F5, #9C79F4, #6473CA, #2B74A9, #6EB7CC). Dark is the home theme:
-// the pastels carry accents on deep indigo surfaces. In light they move into containers and the
-// deeper blues carry text, since pastel text on white fails contrast. The "error" slots hold a
-// soft rose used only for gentle hints: the spec rules out alarm red anywhere in the app.
+val BettaBlush = Color(0xFFFEC4C6)
+val BettaOrchid = Color(0xFFE8A2F5)
+val BettaViolet = Color(0xFF9C79F4)
+val BettaPeriwinkle = Color(0xFF6473CA)
+val BettaBlue = Color(0xFF2B74A9)
+val BettaLagoon = Color(0xFF6EB7CC)
+val BettaInk = Color(0xFF1A1231)
+val BettaMist = Color(0xFFF6F2F9)
+
+val EnergyPink = BettaBlush
+val OnEnergyPink = Color(0xFF4A1A1E)
+val TaskAccent = BettaLagoon
+val RoutineAccent = BettaViolet
+val AnchorAccent = BettaOrchid
+
 private val LightColors = lightColorScheme(
-    primary = Color(0xFF4E5BB0),
-    onPrimary = Color(0xFFFFFFFF),
-    primaryContainer = Color(0xFFDEE0FF),
-    onPrimaryContainer = Color(0xFF12195C),
-    secondary = Color(0xFF2B74A9),
-    onSecondary = Color(0xFFFFFFFF),
-    secondaryContainer = Color(0xFFD3EDF4),
-    onSecondaryContainer = Color(0xFF002D3A),
-    tertiary = Color(0xFF7550C4),
-    onTertiary = Color(0xFFFFFFFF),
-    tertiaryContainer = Color(0xFFF5DDFA),
-    onTertiaryContainer = Color(0xFF2E0B3A),
+    primary = Color(0xFF5B46B1),
+    onPrimary = Color.White,
+    primaryContainer = Color(0xFFE8E2FF),
+    onPrimaryContainer = BettaInk,
+    secondary = Color(0xFF17647E),
+    onSecondary = Color.White,
+    secondaryContainer = Color(0xFFD3EFF7),
+    onSecondaryContainer = Color(0xFF082E3B),
+    tertiary = Color(0xFF86508F),
+    onTertiary = Color.White,
+    tertiaryContainer = Color(0xFFF7DCF8),
+    onTertiaryContainer = Color(0xFF35113A),
     error = Color(0xFF8E4B5C),
-    onError = Color(0xFFFFFFFF),
-    errorContainer = Color(0xFFFEC4C6),
+    onError = Color.White,
+    errorContainer = BettaBlush,
     onErrorContainer = Color(0xFF3B0F18),
-    background = Color(0xFFFBF8FF),
-    onBackground = Color(0xFF1B1B24),
-    surface = Color(0xFFFBF8FF),
-    onSurface = Color(0xFF1B1B24),
-    surfaceVariant = Color(0xFFE3E1F2),
-    onSurfaceVariant = Color(0xFF464659),
-    surfaceContainerLowest = Color(0xFFFFFFFF),
-    surfaceContainerLow = Color(0xFFF5F2FD),
-    surfaceContainer = Color(0xFFEFECF8),
-    surfaceContainerHigh = Color(0xFFE9E6F3),
-    surfaceContainerHighest = Color(0xFFE3E1ED),
-    outline = Color(0xFF76768C),
-    outlineVariant = Color(0xFFC7C5DA),
+    background = Color(0xFFF8F6FC),
+    onBackground = BettaInk,
+    surface = Color(0xFFF8F6FC),
+    onSurface = BettaInk,
+    surfaceVariant = Color(0xFFE7E3F0),
+    onSurfaceVariant = Color(0xFF575167),
+    surfaceContainerLowest = Color.White,
+    surfaceContainerLow = Color(0xFFF1EEF7),
+    surfaceContainer = Color(0xFFECE8F3),
+    surfaceContainerHigh = Color(0xFFE4DFED),
+    surfaceContainerHighest = Color(0xFFDCD6E7),
+    outline = Color(0xFF7A748A),
+    outlineVariant = Color(0xFFCCC5D7),
 )
 
 private val DarkColors = darkColorScheme(
-    primary = Color(0xFF9C79F4),
-    onPrimary = Color(0xFF160B3A),
-    primaryContainer = Color(0xFF3A2D6B),
-    onPrimaryContainer = Color(0xFFE4DAFF),
-    secondary = Color(0xFF6EB7CC),
-    onSecondary = Color(0xFF00303B),
-    secondaryContainer = Color(0xFF1D4A5E),
-    onSecondaryContainer = Color(0xFFC6EDF7),
-    tertiary = Color(0xFFE8A2F5),
-    onTertiary = Color(0xFF3D0F47),
-    tertiaryContainer = Color(0xFF553063),
-    onTertiaryContainer = Color(0xFFF8D8FD),
-    error = Color(0xFFFEC4C6),
+    primary = BettaViolet,
+    onPrimary = Color(0xFF1E1048),
+    primaryContainer = Color(0xFF3B2B70),
+    onPrimaryContainer = Color(0xFFE7DFFF),
+    secondary = BettaLagoon,
+    onSecondary = Color(0xFF052F3A),
+    secondaryContainer = Color(0xFF174656),
+    onSecondaryContainer = Color(0xFFCDEEF5),
+    tertiary = BettaOrchid,
+    onTertiary = Color(0xFF421448),
+    tertiaryContainer = Color(0xFF57305F),
+    onTertiaryContainer = Color(0xFFF9DCF9),
+    error = BettaBlush,
     onError = Color(0xFF4A1A1E),
     errorContainer = Color(0xFF5A2E38),
     onErrorContainer = Color(0xFFFFE2E3),
-    background = Color(0xFF121220),
-    onBackground = Color(0xFFE6E4F2),
-    surface = Color(0xFF121220),
-    onSurface = Color(0xFFE6E4F2),
-    surfaceVariant = Color(0xFF2C2F4A),
-    onSurfaceVariant = Color(0xFFC5C8E6),
-    surfaceContainerLowest = Color(0xFF0D0D18),
-    surfaceContainerLow = Color(0xFF181829),
-    surfaceContainer = Color(0xFF1C1C2F),
-    surfaceContainerHigh = Color(0xFF26273A),
-    surfaceContainerHighest = Color(0xFF313246),
-    outline = Color(0xFF8A8FB5),
-    outlineVariant = Color(0xFF3A3E5C),
+    background = Color(0xFF11111F),
+    onBackground = BettaMist,
+    surface = Color(0xFF11111F),
+    onSurface = BettaMist,
+    surfaceVariant = Color(0xFF303047),
+    onSurfaceVariant = Color(0xFFC9C5D8),
+    surfaceContainerLowest = Color(0xFF0C0C17),
+    surfaceContainerLow = Color(0xFF191927),
+    surfaceContainer = Color(0xFF1E1E30),
+    surfaceContainerHigh = Color(0xFF27273B),
+    surfaceContainerHighest = Color(0xFF313149),
+    outline = Color(0xFF918BA4),
+    outlineVariant = Color(0xFF3F3D54),
 )
 
-/** The betta pink, same in both themes: it marks the day's energy, the one control that sets the tone. */
-val EnergyPink = Color(0xFFFEC4C6)
-val OnEnergyPink = Color(0xFF4A1A1E)
+private val VertoShapes = Shapes(
+    extraSmall = RoundedCornerShape(8.dp),
+    small = RoundedCornerShape(12.dp),
+    medium = RoundedCornerShape(18.dp),
+    large = RoundedCornerShape(26.dp),
+    extraLarge = RoundedCornerShape(32.dp),
+)
+
+private val VertoTypography = Typography().run {
+    copy(
+        displaySmall = displaySmall.copy(
+            fontFamily = FontFamily.SansSerif,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 38.sp,
+            lineHeight = 44.sp,
+            letterSpacing = (-0.6).sp,
+        ),
+        headlineMedium = headlineMedium.copy(
+            fontFamily = FontFamily.SansSerif,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 30.sp,
+            lineHeight = 36.sp,
+            letterSpacing = (-0.35).sp,
+        ),
+        headlineSmall = headlineSmall.copy(
+            fontFamily = FontFamily.SansSerif,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 24.sp,
+            lineHeight = 30.sp,
+        ),
+        titleLarge = titleLarge.copy(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.SemiBold, fontSize = 22.sp),
+        titleMedium = titleMedium.copy(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.SemiBold, fontSize = 18.sp),
+        titleSmall = titleSmall.copy(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.SemiBold, fontSize = 15.sp),
+        bodyLarge = bodyLarge.copy(fontFamily = FontFamily.SansSerif, fontSize = 17.sp, lineHeight = 25.sp),
+        bodyMedium = bodyMedium.copy(fontFamily = FontFamily.SansSerif, fontSize = 15.sp, lineHeight = 22.sp),
+        bodySmall = bodySmall.copy(fontFamily = FontFamily.SansSerif, fontSize = 13.sp, lineHeight = 19.sp),
+        labelLarge = labelLarge.copy(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.SemiBold, fontSize = 14.sp),
+        labelMedium = labelMedium.copy(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Medium, fontSize = 12.sp),
+    )
+}
 
 @Composable
 fun VertoTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
-    val base = Typography()
-    val typography = base.copy(
-        bodyLarge = base.bodyLarge.copy(fontSize = 18.sp, lineHeight = 26.sp),
-        bodyMedium = base.bodyMedium.copy(fontSize = 16.sp, lineHeight = 24.sp),
+    MaterialTheme(
+        colorScheme = if (darkTheme) DarkColors else LightColors,
+        typography = VertoTypography,
+        shapes = VertoShapes,
+        content = content,
     )
-    MaterialTheme(colorScheme = if (darkTheme) DarkColors else LightColors, typography = typography, content = content)
 }
