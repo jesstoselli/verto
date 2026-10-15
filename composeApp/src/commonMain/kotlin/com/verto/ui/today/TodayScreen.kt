@@ -98,7 +98,7 @@ fun TodayScreen(onOpenTask: (String) -> Unit, viewModel: TodayViewModel = koinVi
     if (tunnelOpen) {
         TunnelOverlay(
             item = tunnelItem,
-            canSkip = content.tunnel.size > 1,
+            canSkip = content.canSkipTunnel,
             onDone = viewModel::tunnelDone,
             onOther = viewModel::tunnelOther,
             onSplit = viewModel::splitStep,

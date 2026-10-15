@@ -44,6 +44,8 @@ sealed interface TodayUiState {
         val expandedIds: Set<String>,
         /** "Só 1 coisa": what to do now first, then the rest in order. */
         val tunnel: List<TunnelItem> = emptyList(),
+        /** Counts skipped items too: after "Outro" the list is shorter, but there is still another one. */
+        val canSkipTunnel: Boolean = false,
     ) : TodayUiState
 }
 
@@ -109,7 +111,13 @@ class TodayViewModel(
             val candidates = TunnelRules.candidates(today, plans)
             // Once everything was skipped, the list starts over instead of going empty.
             val tunnel = candidates.filter { it.key !in skipped }.ifEmpty { candidates }
-            TodayUiState.Content(today, plans, expanded ?: setOfNotNull(today.expandedAnchorId), tunnel)
+            TodayUiState.Content(
+                today = today,
+                shownPlans = plans,
+                expandedIds = expanded ?: setOfNotNull(today.expandedAnchorId),
+                tunnel = tunnel,
+                canSkipTunnel = candidates.size > 1,
+            )
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), TodayUiState.Loading)
 

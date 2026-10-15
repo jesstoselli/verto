@@ -181,6 +181,8 @@ class TodayViewModelTest : ViewModelTest() {
         vm.tunnelOther()
         val second = vm.content { it.tunnel.first() is TunnelItem.TaskStep }
         assertEquals(1, second.tunnel.size)
+        // "Outro" must stay available: the skipped one is still waiting to come back around.
+        assertTrue(second.canSkipTunnel)
 
         vm.tunnelOther()
         vm.content { it.tunnel.first() is TunnelItem.RoutineStep && it.tunnel.size == 2 }
