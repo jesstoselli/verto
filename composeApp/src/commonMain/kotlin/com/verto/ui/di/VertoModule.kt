@@ -18,6 +18,7 @@ import com.verto.data.sync.LocalStore
 import com.verto.data.sync.SyncEngine
 import com.verto.data.sync.SyncScheduler
 import com.verto.domain.SettingsSource
+import com.verto.ui.AppViewModel
 import com.verto.ui.account.AccountViewModel
 import com.verto.ui.common.ClockTicker
 import com.verto.ui.common.Ticker
@@ -67,4 +68,5 @@ val vertoModule = module {
     viewModel { (args: AnchorEditorArgs) -> AnchorEditorViewModel(args.anchorId, get()) }
     viewModel { (args: RoutineEditorArgs) -> RoutineEditorViewModel(args, get(), get()) }
     viewModelOf(::TodayViewModel)
+    viewModelOf(::AppViewModel)
 }
