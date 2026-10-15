@@ -36,6 +36,9 @@ class TaskEditorViewModel(taskId: String?, private val tasks: TaskRepository) : 
     private val _state = MutableStateFlow(TaskEditorState(loaded = taskId == null))
     val state: StateFlow<TaskEditorState> = _state.asStateFlow()
 
+    // A second tap on "Salvar" before the first write lands must not create a second task.
+    private var saving = false
+
     init {
         if (taskId != null) {
             viewModelScope.launch {
@@ -83,7 +86,8 @@ class TaskEditorViewModel(taskId: String?, private val tasks: TaskRepository) : 
 
     fun save() {
         val current = _state.value
-        if (!current.canSave) return
+        if (!current.canSave || saving) return
+        saving = true
         viewModelScope.launch {
             tasks.save(
                 TaskDraft(

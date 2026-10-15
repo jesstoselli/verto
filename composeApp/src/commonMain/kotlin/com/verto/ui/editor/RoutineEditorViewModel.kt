@@ -41,6 +41,9 @@ class RoutineEditorViewModel(
     private val _state = MutableStateFlow(RoutineEditorState())
     val state: StateFlow<RoutineEditorState> = _state.asStateFlow()
 
+    // A second tap on \"Salvar\" before the first write lands must not create a second routine.
+    private var saving = false
+
     init {
         viewModelScope.launch {
             routines.observeAnchors().collect { anchors ->
@@ -112,6 +115,8 @@ class RoutineEditorViewModel(
             _state.update { it.copy(message = problem) }
             return
         }
+        if (saving) return
+        saving = true
         viewModelScope.launch {
             routines.saveRoutine(RoutineDraft(current.id, current.name, anchorId, current.weekdays, stepsA, stepsC))
             args.fromInboxId?.let { inbox.setState(it, InboxState.Processed) }

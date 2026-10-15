@@ -58,4 +58,20 @@ class AnchorEditorViewModelTest : ViewModelTest() {
         vm.state.first { it.message != null }
         assertEquals(1, graph.routines.observeAnchors().first().size)
     }
+
+    @Test
+    fun save_tappedTwice_createsOneAnchor() = runTest {
+        val vm = AnchorEditorViewModel(null, graph.routines)
+        vm.setName("Almocei")
+        vm.setStart("12")
+        vm.setEnd("14")
+
+        vm.save()
+        vm.save()
+
+        vm.state.first { it.closed }
+        // Writes are serialized, so once this one lands any second save has landed too.
+        graph.routines.saveAnchor(AnchorDraft(null, "sentinela", LocalTime(20, 0), LocalTime(21, 0)))
+        assertEquals(1, graph.routines.observeAnchors().first().count { it.name == "Almocei" })
+    }
 }

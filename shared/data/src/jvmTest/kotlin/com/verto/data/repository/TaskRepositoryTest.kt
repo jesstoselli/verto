@@ -84,4 +84,26 @@ class TaskRepositoryTest {
         assertTrue(tasks.observeAllSteps().first().isEmpty())
         assertTrue(graph.db.outboxDao().all().all { it.deletedAt != null })
     }
+
+    @Test
+    fun save_withSameSteps_keepsAManualFinish() = runTest {
+        val id = tasks.save(TaskDraft(null, "IR", steps = listOf(step("abrir site"), step("enviar"))))
+        tasks.toggleStep(tasks.draftFor(id)!!.steps.first().id!!)
+        tasks.setDone(id, true)
+
+        tasks.save(tasks.draftFor(id)!!)
+
+        assertNotNull(task(id).doneAt)
+    }
+
+    @Test
+    fun save_withSameSteps_keepsAManualReopen() = runTest {
+        val id = tasks.save(TaskDraft(null, "IR", steps = listOf(step("abrir site"))))
+        tasks.toggleStep(tasks.draftFor(id)!!.steps.single().id!!)
+        tasks.setDone(id, false)
+
+        tasks.save(tasks.draftFor(id)!!)
+
+        assertNull(task(id).doneAt)
+    }
 }

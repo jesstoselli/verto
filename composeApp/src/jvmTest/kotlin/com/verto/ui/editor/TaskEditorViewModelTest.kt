@@ -50,4 +50,18 @@ class TaskEditorViewModelTest : ViewModelTest() {
         assertFalse(vm.state.value.canSave)
         assertEquals(emptyList(), graph.tasks.observeTasks().first())
     }
+
+    @Test
+    fun save_tappedTwice_createsOneTask() = runTest {
+        val vm = TaskEditorViewModel(null, graph.tasks)
+        vm.setTitle("Fazer IR")
+
+        vm.save()
+        vm.save()
+
+        vm.state.first { it.closed }
+        // Writes are serialized, so once this one lands any second save has landed too.
+        graph.tasks.save(TaskDraft(null, "sentinela"))
+        assertEquals(1, graph.tasks.observeTasks().first().count { it.title == "Fazer IR" })
+    }
 }

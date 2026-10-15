@@ -1,5 +1,6 @@
 package com.verto.ui.inbox
 
+import com.verto.data.repository.TaskDraft
 import com.verto.domain.model.InboxSource
 import com.verto.ui.ViewModelTest
 import com.verto.ui.uiAt
@@ -46,5 +47,19 @@ class InboxViewModelTest : ViewModelTest() {
 
         assertEquals("ideia antiga", state.incubated.single().text)
         assertEquals(emptyList(), state.raw)
+    }
+
+    @Test
+    fun toTask_tappedTwice_createsOneTask() = runTest {
+        graph.inbox.capture("fazer IR", InboxSource.App)
+        val vm = viewModel()
+        val item = vm.state.first { it.raw.isNotEmpty() }.raw.single()
+
+        vm.toTask(item)
+        vm.toTask(item)
+
+        vm.state.first { it.raw.isEmpty() }
+        graph.tasks.save(TaskDraft(null, "sentinela"))
+        assertEquals(1, graph.tasks.observeTasks().first().count { it.title == "fazer IR" })
     }
 }

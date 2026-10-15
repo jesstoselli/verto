@@ -28,6 +28,7 @@ class TodayViewModelTest : ViewModelTest() {
         graph.ticker,
         ZoneProvider { TestZone },
         graph.settings,
+        graph.clock,
     )
 
     private suspend fun lunchRoutine(): String {
@@ -93,5 +94,34 @@ class TodayViewModelTest : ViewModelTest() {
 
         val after = vm.content { it.today.day == LocalDate(2026, 10, 16) }
         assertTrue(after.shownPlans.isEmpty())
+    }
+
+    @Test
+    fun actingRightAfterWake_countsForTheNewDay_andLeavesYesterdayAlone() = runTest {
+        lunchRoutine()
+        val vm = viewModel()
+        val card = vm.content { it.today.sections.isNotEmpty() }.today.sections.single().routines.single()
+        val stepId = card.stepsC.single().step.id
+        vm.toggleRoutineStep(stepId)
+        graph.routines.observeDay(LocalDate(2026, 10, 15)).first { it.logs.isNotEmpty() }
+
+        // The phone slept through the night: the clock moved but the ticker has not fired yet.
+        graph.clock.now = uiAt(16, 7, 30)
+        vm.toggleRoutineStep(stepId)
+
+        graph.routines.observeDay(LocalDate(2026, 10, 16)).first { it.logs.isNotEmpty() }
+        assertEquals(1, graph.routines.observeDay(LocalDate(2026, 10, 15)).first().logs.size)
+        vm.content { it.today.day == LocalDate(2026, 10, 16) }
+    }
+
+    @Test
+    fun resume_movesTheScreenToTheNewDay() = runTest {
+        val vm = viewModel()
+        vm.content()
+
+        graph.clock.now = uiAt(16, 7, 30)
+        vm.onResume()
+
+        vm.content { it.today.day == LocalDate(2026, 10, 16) }
     }
 }

@@ -27,6 +27,8 @@ data class InboxItem(
     val createdAt: Instant,
     val source: InboxSource,
     val state: InboxState,
+    /** When it last became raw: a restored item starts its incubation clock over. */
+    val rawSince: Instant = createdAt,
 )
 
 data class Task(

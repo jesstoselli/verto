@@ -81,7 +81,10 @@ class TaskRepository(
                 pinnedToToday = draft.pinnedToToday,
                 doneAt = existing?.doneAt?.let { Instant.fromEpochMilliseconds(it) },
             )
-            val doneAt = TaskRules.doneAtAfterStepChange(task, steps.map { it.toDomain() }, now)
+            // Only a change to the step list re-derives doneAt; otherwise a "Concluir" or "Reabrir" tapped
+            // in the editor would be undone by the "Salvar" that follows it.
+            val stepsChanged = draft.steps.any { it.id == null } || current.any { it.id !in kept }
+            val doneAt = if (stepsChanged) TaskRules.doneAtAfterStepChange(task, steps.map { it.toDomain() }, now) else task.doneAt
             put(task.copy(doneAt = doneAt).toEntity(nowMs))
         }
         return id

@@ -9,5 +9,5 @@ object InboxRules {
 
     /** Moved aside silently: an untouched braindump should never turn into guilt. */
     fun toIncubate(items: List<InboxItem>, now: Instant, after: Duration): List<InboxItem> =
-        items.filter { it.state == InboxState.Raw && now - it.createdAt >= after }
+        items.filter { it.state == InboxState.Raw && now - it.rawSince >= after }
 }

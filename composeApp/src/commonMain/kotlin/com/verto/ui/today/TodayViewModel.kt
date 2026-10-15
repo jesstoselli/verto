@@ -15,20 +15,24 @@ import com.verto.domain.rules.TodayBuilder
 import com.verto.domain.rules.TodayInput
 import com.verto.ui.common.Ticker
 import com.verto.ui.common.next
+import kotlin.time.Clock
+import kotlin.time.Instant
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
-import kotlin.time.Instant
 
 sealed interface TodayUiState {
     data object Loading : TodayUiState
@@ -47,12 +51,16 @@ class TodayViewModel(
     ticker: Ticker,
     private val zones: ZoneProvider,
     private val settings: VertoSettings,
+    private val clock: Clock,
 ) : ViewModel() {
 
     private val shownPlans = MutableStateFlow<Map<String, Plan>>(emptyMap())
     private val expandedOverride = MutableStateFlow<Set<String>?>(null)
 
-    private val currentDay: StateFlow<LocalDate?> = ticker.ticks()
+    // The ticker's delay pauses while the phone sleeps, so a wake-up or a tap must not wait for its next tick.
+    private val nudges = MutableSharedFlow<Instant>(extraBufferCapacity = 1)
+
+    private val currentDay: StateFlow<LocalDate?> = merge(ticker.ticks(), nudges)
         .onEach { routines.recordOpenedWindows(dayOf(it)) }
         .map { dayOf(it) }
         .distinctUntilChanged()
@@ -89,9 +97,12 @@ class TodayViewModel(
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), TodayUiState.Loading)
 
-    fun cycleEnergy() {
-        val content = state.value as? TodayUiState.Content ?: return
-        viewModelScope.launch { days.setEnergy(content.today.day, content.today.energy.next()) }
+    fun cycleEnergy() = withDay { day ->
+        days.setEnergy(day, (days.observeEnergy(day).first() ?: EnergyLevel.Medium).next())
+    }
+
+    fun onResume() {
+        nudges.tryEmit(clock.now())
     }
 
     fun tapAnchor(anchorId: String) = withDay { routines.tapAnchor(anchorId, it) }
@@ -123,7 +134,8 @@ class TodayViewModel(
     private fun dayOf(instant: Instant): LocalDate = LogicalDay.of(instant, zones.current(), settings.dayStartsAt)
 
     private fun withDay(action: suspend (LocalDate) -> Unit) {
-        val day = currentDay.value ?: return
-        viewModelScope.launch { action(day) }
+        val now = clock.now()
+        nudges.tryEmit(now)
+        viewModelScope.launch { action(dayOf(now)) }
     }
 }

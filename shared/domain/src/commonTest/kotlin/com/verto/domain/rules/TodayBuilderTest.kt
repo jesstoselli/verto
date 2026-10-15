@@ -167,4 +167,15 @@ class TodayBuilderTest {
         assertEquals(1, card.doneSteps)
         assertEquals(3, card.totalSteps)
     }
+
+    @Test
+    fun anchorBeforeDayStart_closesTheDay_andTheMorningOneIsExpanded() {
+        val today = build(
+            anchors = listOf(anchor("bedtime", 1), anchor("wakeup", 7)),
+            routines = listOf(routine("teeth", "bedtime"), routine("water", "wakeup")),
+        )
+
+        assertEquals(listOf("wakeup", "bedtime"), today.sections.map { it.anchor.id })
+        assertEquals("wakeup", today.expandedAnchorId)
+    }
 }

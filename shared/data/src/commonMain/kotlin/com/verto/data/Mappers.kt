@@ -27,7 +27,7 @@ import kotlin.time.Instant
 private fun Long.toInstant(): Instant = Instant.fromEpochMilliseconds(this)
 
 internal fun InboxItemEntity.toDomain() =
-    InboxItem(id, text, createdAt.toInstant(), source.toEnum(), state.toEnum())
+    InboxItem(id, text, createdAt.toInstant(), source.toEnum(), state.toEnum(), rawSince = updatedAt.toInstant())
 
 internal fun TaskEntity.toDomain() = Task(
     id = id,

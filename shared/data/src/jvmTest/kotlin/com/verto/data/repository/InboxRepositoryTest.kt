@@ -58,4 +58,18 @@ class InboxRepositoryTest {
         assertEquals(InboxState.Incubated, graph.inbox.get(old)?.state)
         assertEquals(InboxState.Raw, graph.inbox.get(fresh)?.state)
     }
+
+    @Test
+    fun restoredItem_isNotIncubatedAgainRightAway() = runTest {
+        graph.clock.now = localAt(10, 10)
+        val id = graph.inbox.capture("ideia", InboxSource.App)!!
+        graph.clock.now = localAt(14, 10)
+        graph.inbox.incubateStale(graph.settings)
+        graph.inbox.setState(id, InboxState.Raw)
+        graph.clock.now = localAt(15, 10)
+
+        graph.inbox.incubateStale(graph.settings)
+
+        assertEquals(InboxState.Raw, graph.inbox.get(id)?.state)
+    }
 }

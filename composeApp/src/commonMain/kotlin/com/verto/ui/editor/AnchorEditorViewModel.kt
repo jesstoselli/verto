@@ -29,6 +29,9 @@ class AnchorEditorViewModel(anchorId: String?, private val routines: RoutineRepo
     private val _state = MutableStateFlow(AnchorEditorState(loaded = anchorId == null))
     val state: StateFlow<AnchorEditorState> = _state.asStateFlow()
 
+    // A second tap on \"Salvar\" before the first write lands must not create a second anchor.
+    private var saving = false
+
     init {
         if (anchorId != null) {
             viewModelScope.launch {
@@ -62,6 +65,8 @@ class AnchorEditorViewModel(anchorId: String?, private val routines: RoutineRepo
             _state.update { it.copy(message = problem) }
             return
         }
+        if (saving) return
+        saving = true
         viewModelScope.launch {
             routines.saveAnchor(AnchorDraft(current.id, current.name, start, end))
             _state.update { it.copy(closed = true) }

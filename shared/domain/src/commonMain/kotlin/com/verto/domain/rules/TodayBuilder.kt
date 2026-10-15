@@ -74,7 +74,10 @@ object TodayBuilder {
         val suggested = RoutineRules.suggestedPlan(input.energy)
 
         val sections = input.anchors
-            .sortedWith(compareBy<Anchor> { it.windowStart }.thenBy { it.name })
+            .sortedWith(
+                compareBy<Anchor> { AnchorRules.windowOpensAt(it, input.day, input.zone, input.settings.dayStartsAt) }
+                    .thenBy { it.name },
+            )
             .mapNotNull { anchor ->
                 val routines = scheduled.filter { it.anchorId == anchor.id }.sortedBy { it.name }
                 if (routines.isEmpty()) {

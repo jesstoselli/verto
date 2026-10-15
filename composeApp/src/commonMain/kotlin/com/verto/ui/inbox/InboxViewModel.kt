@@ -33,6 +33,9 @@ class InboxViewModel(
     private val draft = MutableStateFlow("")
     private val showIncubated = MutableStateFlow(false)
 
+    // The card stays on screen until the write lands; a second tap must not make a second task.
+    private val converting = mutableSetOf<String>()
+
     val state: StateFlow<InboxUiState> = combine(inbox.observe(), draft, showIncubated) { items, text, show ->
         InboxUiState(
             draft = text,
@@ -57,6 +60,7 @@ class InboxViewModel(
     }
 
     fun toTask(item: InboxItem) {
+        if (!converting.add(item.id)) return
         viewModelScope.launch {
             tasks.save(TaskDraft(id = null, title = item.text))
             inbox.setState(item.id, InboxState.Processed)

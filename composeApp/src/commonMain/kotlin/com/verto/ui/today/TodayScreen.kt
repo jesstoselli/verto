@@ -23,6 +23,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.verto.domain.model.DueKind
 import com.verto.domain.model.Plan
@@ -43,6 +44,10 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun TodayScreen(viewModel: TodayViewModel = koinViewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    LifecycleResumeEffect(viewModel) {
+        viewModel.onResume()
+        onPauseOrDispose { }
+    }
     val content = state as? TodayUiState.Content ?: return
     val today = content.today
 
