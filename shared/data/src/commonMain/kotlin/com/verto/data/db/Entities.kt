@@ -105,3 +105,10 @@ data class OutboxEntity(
     val deletedAt: Long?,
     val clientUpdatedAt: Long,
 )
+
+/** Small named values the sync engine keeps next to the data they describe (pull cursor, last sync). */
+@Entity(tableName = "sync_state")
+data class SyncStateEntity(
+    @PrimaryKey val name: String,
+    val value: String,
+)

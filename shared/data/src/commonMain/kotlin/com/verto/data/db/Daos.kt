@@ -119,4 +119,26 @@ interface OutboxDao {
 
     @Query("SELECT * FROM outbox ORDER BY seq")
     suspend fun all(): List<OutboxEntity>
+
+    @Query("SELECT * FROM outbox ORDER BY seq LIMIT :limit")
+    suspend fun oldest(limit: Int): List<OutboxEntity>
+
+    // REPLACE gives a rewritten record a new seq, so deleting by seq never drops an edit made after the read.
+    @Query("DELETE FROM outbox WHERE seq IN (:seqs)")
+    suspend fun deleteSent(seqs: List<Long>)
+
+    @Query("SELECT EXISTS(SELECT 1 FROM outbox WHERE entityType = :entityType AND entityId = :entityId)")
+    suspend fun hasPending(entityType: String, entityId: String): Boolean
+
+    @Query("SELECT COUNT(*) FROM outbox")
+    fun observeSize(): Flow<Int>
+}
+
+@Dao
+interface SyncStateDao {
+    @Query("SELECT value FROM sync_state WHERE name = :name")
+    suspend fun get(name: String): String?
+
+    @Upsert
+    suspend fun put(row: SyncStateEntity)
 }

@@ -10,9 +10,20 @@ import com.verto.data.db.OutboxEntity
 import com.verto.data.db.RoutineEntity
 import com.verto.data.db.RoutineLogEntity
 import com.verto.data.db.StepEntity
+import com.verto.data.db.SyncStateEntity
 import com.verto.data.db.TaskEntity
 import com.verto.data.db.VertoDatabase
+import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.encodeToString
+import kotlin.time.Instant
+
+/** A change pulled from the server, payload still as JSON text. */
+data class RemoteChange(
+    val entityType: String,
+    val id: String,
+    val payload: String,
+    val deletedAt: Long?,
+)
 
 class LocalStore(val db: VertoDatabase) {
 
@@ -21,6 +32,57 @@ class LocalStore(val db: VertoDatabase) {
         db.useWriterConnection { transactor ->
             transactor.immediateTransaction { WriteScope(db).block() }
         }
+
+    suspend fun pendingBatch(limit: Int): List<OutboxEntity> = db.outboxDao().oldest(limit)
+
+    suspend fun markSent(seqs: List<Long>) {
+        if (seqs.isNotEmpty()) db.outboxDao().deleteSent(seqs)
+    }
+
+    fun observePendingCount(): Flow<Int> = db.outboxDao().observeSize()
+
+    /**
+     * Writes pulled records straight to their tables (they must not go back out through the outbox)
+     * and moves the cursor in the same transaction, so a crash never skips or half-applies a page.
+     */
+    suspend fun applyRemote(changes: List<RemoteChange>, cursor: Long, receivedAt: Long) {
+        db.useWriterConnection { transactor ->
+            transactor.immediateTransaction {
+                for (change in changes) {
+                    // A local edit still waiting in the outbox wins: it reaches the server on the next push.
+                    if (db.outboxDao().hasPending(change.entityType, change.id)) continue
+                    val row = RemoteDecoder.decode(change.entityType, change.id, change.payload, change.deletedAt, receivedAt)
+                    upsertQuietly(row)
+                }
+                db.syncStateDao().put(SyncStateEntity(CURSOR, cursor.toString()))
+            }
+        }
+    }
+
+    suspend fun cursor(): Long = db.syncStateDao().get(CURSOR)?.toLongOrNull() ?: 0L
+
+    suspend fun lastSyncedAt(): Instant? = db.syncStateDao().get(LAST_SYNCED_AT)?.let { Instant.parse(it) }
+
+    suspend fun setLastSyncedAt(at: Instant) = db.syncStateDao().put(SyncStateEntity(LAST_SYNCED_AT, at.toString()))
+
+    private suspend fun upsertQuietly(row: Any?) {
+        when (row) {
+            is InboxItemEntity -> db.inboxDao().upsert(row)
+            is TaskEntity -> db.taskDao().upsert(row)
+            is StepEntity -> db.stepDao().upsert(row)
+            is AnchorEntity -> db.anchorDao().upsertAnchor(row)
+            is AnchorEventEntity -> db.anchorDao().upsertEvent(row)
+            is RoutineEntity -> db.routineDao().upsertRoutine(row)
+            is RoutineLogEntity -> db.routineDao().upsertLog(row)
+            is DayEnergyEntity -> db.dayEnergyDao().upsert(row)
+            else -> Unit
+        }
+    }
+
+    private companion object {
+        const val CURSOR = "pull_cursor"
+        const val LAST_SYNCED_AT = "last_synced_at"
+    }
 }
 
 class WriteScope internal constructor(private val db: VertoDatabase) {
