@@ -28,8 +28,9 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.verto.domain.model.StepEnergy
 import com.verto.domain.rules.TunnelItem
-import com.verto.ui.common.Hint
 import com.verto.ui.common.FoldedSurface
+import com.verto.ui.common.Hint
+import com.verto.ui.common.focusSurfaceColor
 import com.verto.ui.common.label
 
 internal fun TunnelItem.title(): String = when (this) {
@@ -84,6 +85,8 @@ internal fun TunnelOverlay(
                     modifier = Modifier.fillMaxWidth(),
                     foldColor = MaterialTheme.colorScheme.primary,
                     foldSize = 28.dp,
+                    color = focusSurfaceColor(),
+                    cornerRadius = 26.dp,
                 ) {
                     Column(
                         Modifier.padding(start = 20.dp, end = 36.dp, top = 22.dp, bottom = 26.dp),

@@ -17,6 +17,8 @@ kotlin {
         namespace = "com.verto.ui"
         compileSdk = 37
         minSdk = 26
+        // Compose resources (the bundled brand fonts) only reach the APK with Android resources enabled.
+        androidResources { enable = true }
         compilerOptions { jvmTarget.set(JvmTarget.JVM_17) }
     }
     jvm {

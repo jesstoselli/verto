@@ -64,6 +64,7 @@ import com.verto.ui.common.ScreenHeader
 import com.verto.ui.common.SectionHeader
 import com.verto.ui.common.StepCheckRow
 import com.verto.ui.common.deadlineLabel
+import com.verto.ui.common.focusSurfaceColor
 import com.verto.ui.common.label
 import com.verto.ui.common.longPt
 import com.verto.ui.common.softDateLabel
@@ -216,6 +217,9 @@ private fun FocusCard(focus: FocusItem, onOpen: () -> Unit) {
         modifier = Modifier.fillMaxWidth(),
         foldColor = MaterialTheme.colorScheme.primary,
         foldSize = 28.dp,
+        color = focusSurfaceColor(),
+        cornerRadius = 26.dp,
+        shadowElevation = 3.dp,
     ) {
         Column(
             Modifier.padding(start = 20.dp, end = 34.dp, top = 20.dp, bottom = 22.dp),

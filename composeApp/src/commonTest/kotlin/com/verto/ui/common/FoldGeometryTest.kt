@@ -6,12 +6,24 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class FoldGeometryTest {
-    @Test
-    fun foldTriangle_clampsToSurfaceBounds() {
-        val points = foldTriangle(width = 20f, height = 16f, requestedSize = 40f)
 
-        assertEquals(3, points.size)
-        assertTrue(points.all { it.x in 0f..20f && it.y in 0f..16f })
-        assertEquals(Offset(20f, 16f), points.last())
+    @Test
+    fun foldCut_keepsTheRequestedSize_whenItFits() {
+        // A 12dp fold next to 18dp corners used to vanish under the rounding; the cut keeps all of it.
+        assertEquals(12f, foldCut(width = 300f, height = 60f, requested = 12f, radius = 18f))
+    }
+
+    @Test
+    fun foldCut_neverEatsTheNeighbouringRoundedCorners() {
+        assertEquals(42f, foldCut(width = 300f, height = 60f, requested = 80f, radius = 18f))
+        assertEquals(0f, foldCut(width = 10f, height = 10f, requested = 8f, radius = 18f))
+    }
+
+    @Test
+    fun foldFlap_sitsInsideTheCardCorner() {
+        val points = foldFlap(width = 300f, height = 60f, size = 12f)
+
+        assertEquals(listOf(Offset(288f, 60f), Offset(300f, 48f), Offset(288f, 48f)), points)
+        assertTrue(points.all { it.x in 0f..300f && it.y in 0f..60f })
     }
 }

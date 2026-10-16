@@ -95,7 +95,15 @@ fun PlanScreen(
         when (state.selectedTab) {
             PlanTab.Tasks -> {
                 item { SectionHeader("Por decidir", accent = TaskAccent) }
-                if (state.openTasks.isEmpty()) item { Hint("Nenhuma tarefa aberta. Quando algo pedir mais de um passo, ele mora aqui.") }
+                if (state.openTasks.isEmpty()) {
+                    item {
+                        EmptyAction(
+                            hint = "Nenhuma tarefa aberta. Quando algo pedir mais de um passo, ele mora aqui.",
+                            action = "Nova tarefa",
+                            onAction = { onOpenTask(null) },
+                        )
+                    }
+                }
                 items(state.openTasks, key = { it.id }) { task ->
                     TaskRow(task, state.today, muted = false, onClick = { onOpenTask(task.id) }, onUnpin = { viewModel.unpin(task) })
                 }
@@ -116,10 +124,20 @@ fun PlanScreen(
                 item { SectionHeader("Seus ritmos", accent = RoutineAccent) }
                 if (state.routines.isEmpty()) {
                     item {
-                        Hint(
-                            if (state.anchors.isEmpty()) "Crie uma âncora primeiro: é ela que diz quando a rotina acontece."
-                            else "Nenhuma rotina ainda. Uma rotina acontece depois de uma âncora, com um plano ideal e um mínimo.",
-                        )
+                        // Without an anchor a routine cannot be saved, so the way forward is the anchor editor.
+                        if (state.anchors.isEmpty()) {
+                            EmptyAction(
+                                hint = "Crie uma âncora primeiro: é ela que diz quando a rotina acontece.",
+                                action = "Nova âncora",
+                                onAction = { onOpenAnchor(null) },
+                            )
+                        } else {
+                            EmptyAction(
+                                hint = "Nenhuma rotina ainda. Uma rotina acontece depois de uma âncora, com um plano ideal e um mínimo.",
+                                action = "Nova rotina",
+                                onAction = { onOpenRoutine(null) },
+                            )
+                        }
                     }
                 }
                 items(state.routines, key = { "routine-${it.routine.id}" }) { row ->
@@ -133,7 +151,15 @@ fun PlanScreen(
             }
             PlanTab.Anchors -> {
                 item { SectionHeader("Pontos do dia", accent = AnchorAccent) }
-                if (state.anchors.isEmpty()) item { Hint("Âncoras são momentos do seu dia, como “Acordei” ou “Almocei”. As rotinas acontecem depois delas.") }
+                if (state.anchors.isEmpty()) {
+                    item {
+                        EmptyAction(
+                            hint = "Âncoras são momentos do seu dia, como “Acordei” ou “Almocei”. As rotinas acontecem depois delas.",
+                            action = "Nova âncora",
+                            onAction = { onOpenAnchor(null) },
+                        )
+                    }
+                }
                 items(state.anchors, key = { "anchor-${it.id}" }) { anchor ->
                     BrandListRow(
                         title = anchor.name,
@@ -188,5 +214,14 @@ private fun TaskRow(task: Task, today: LocalDate?, muted: Boolean, onClick: () -
                 }
             }
         }
+    }
+}
+
+/** An empty tab explains its role and offers the one action that fills it. */
+@Composable
+private fun EmptyAction(hint: String, action: String, onAction: () -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Hint(hint)
+        TextButton(onClick = onAction) { Text(action) }
     }
 }
