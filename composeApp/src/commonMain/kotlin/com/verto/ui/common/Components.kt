@@ -145,16 +145,26 @@ fun EditorSection(
 
 @Composable
 fun ListRow(title: String, subtitle: String?, onClick: () -> Unit, accent: Color = MaterialTheme.colorScheme.primary) {
-    Surface(
-        onClick = onClick,
+    BrandListRow(title = title, subtitle = subtitle, accent = accent, onClick = onClick)
+}
+
+@Composable
+fun BrandListRow(
+    title: String,
+    subtitle: String?,
+    accent: Color,
+    onClick: () -> Unit,
+) {
+    FoldedSurface(
         modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-        shape = MaterialTheme.shapes.medium,
+        foldColor = accent.copy(alpha = 0.72f),
+        foldSize = 12.dp,
+        onClick = onClick,
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.width(4.dp).height(46.dp)) { Surface(Modifier.fillMaxSize(), color = accent) {} }
+            Box(Modifier.width(4.dp).height(48.dp)) { Surface(Modifier.fillMaxSize(), color = accent) {} }
             Column(
-                Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+                Modifier.weight(1f).padding(start = 16.dp, end = 24.dp, top = 14.dp, bottom = 14.dp),
                 verticalArrangement = Arrangement.spacedBy(2.dp),
             ) {
                 Text(title, style = MaterialTheme.typography.bodyLarge)
