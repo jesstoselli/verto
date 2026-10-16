@@ -179,7 +179,7 @@ private fun TaskRow(task: Task, today: LocalDate?, muted: Boolean, onClick: () -
                 val due = task.dueDate
                 when {
                     onUnpin == null -> Unit
-                    task.pinnedToToday -> FilterChip(selected = true, onClick = onUnpin, label = { Text("Hoje") })
+                    task.pinnedToToday -> FilterChip(selected = true, onClick = onUnpin, label = { Text("Pra hoje") })
                     due != null && today != null -> Text(
                         relativeDay(due, today),
                         style = MaterialTheme.typography.labelLarge,
