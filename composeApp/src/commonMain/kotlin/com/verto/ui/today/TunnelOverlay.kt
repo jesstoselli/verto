@@ -29,6 +29,7 @@ import androidx.compose.ui.window.DialogProperties
 import com.verto.domain.model.StepEnergy
 import com.verto.domain.rules.TunnelItem
 import com.verto.ui.common.Hint
+import com.verto.ui.common.FoldedSurface
 import com.verto.ui.common.label
 
 internal fun TunnelItem.title(): String = when (this) {
@@ -78,10 +79,22 @@ internal fun TunnelOverlay(
                     return@Column
                 }
                 var splitting by remember(item.key) { mutableStateOf(false) }
-                Text(item.context(), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text(item.title(), style = MaterialTheme.typography.headlineMedium)
-                item.energy()?.let {
-                    Text(it.label(), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.secondary)
+                Text("Só o próximo passo.", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.secondary)
+                FoldedSurface(
+                    modifier = Modifier.fillMaxWidth(),
+                    foldColor = MaterialTheme.colorScheme.primary,
+                    foldSize = 28.dp,
+                ) {
+                    Column(
+                        Modifier.padding(start = 20.dp, end = 36.dp, top = 22.dp, bottom = 26.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Text(item.context(), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(item.title(), style = MaterialTheme.typography.headlineMedium)
+                        item.energy()?.let {
+                            Text(it.label(), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.secondary)
+                        }
+                    }
                 }
                 val stepId = item.stepId()
                 if (splitting && stepId != null) {

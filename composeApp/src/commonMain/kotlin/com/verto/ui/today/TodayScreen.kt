@@ -1,6 +1,5 @@
 package com.verto.ui.today
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -44,8 +43,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -59,7 +56,10 @@ import com.verto.domain.rules.AnchorSection
 import com.verto.domain.rules.RoutineCard
 import com.verto.domain.rules.TaskCard
 import com.verto.ui.common.EmptyState
+import com.verto.ui.common.FoldedSurface
 import com.verto.ui.common.Hint
+import com.verto.ui.common.PathNodeState
+import com.verto.ui.common.PathRail
 import com.verto.ui.common.ScreenHeader
 import com.verto.ui.common.SectionHeader
 import com.verto.ui.common.StepCheckRow
@@ -113,7 +113,7 @@ fun TodayScreen(onOpenTask: (String) -> Unit, viewModel: TodayViewModel = koinVi
     ) {
         item {
             ScreenHeader(
-                title = "Hoje",
+                title = "Agora",
                 subtitle = today.day.longPt().replaceFirstChar { it.uppercase() },
                 action = { EnergyPicker(today.energy, viewModel::setEnergy) },
             )
@@ -211,30 +211,29 @@ private fun EnergyPicker(energy: EnergyLevel, onPick: (EnergyLevel) -> Unit) {
 
 @Composable
 private fun FocusCard(focus: FocusItem, onOpen: () -> Unit) {
-    Surface(
+    FoldedSurface(
         onClick = onOpen,
         modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.secondaryContainer,
-        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-        shape = MaterialTheme.shapes.large,
+        foldColor = MaterialTheme.colorScheme.primary,
+        foldSize = 28.dp,
     ) {
         Column(
-            Modifier.padding(horizontal = 20.dp, vertical = 18.dp),
+            Modifier.padding(start = 20.dp, end = 34.dp, top = 20.dp, bottom = 22.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            Text("Só 1 coisa", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.secondary)
+            Text("Seu próximo passo", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.secondary)
             Text(focus.title, style = MaterialTheme.typography.headlineSmall)
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(
                     focus.context,
                     modifier = Modifier.weight(1f),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.72f),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 focus.energy?.let {
                     Text(it.label(), style = MaterialTheme.typography.labelMedium)
                 }
-                Button(onClick = focus.onComplete) { Text("Feito") }
+                Button(onClick = focus.onComplete) { Text("Marcar como feito") }
             }
         }
     }
@@ -287,25 +286,21 @@ private fun AnchorFlowCard(
     onSkip: (String) -> Unit,
     onUndo: (String) -> Unit,
 ) {
-    val railColor = MaterialTheme.colorScheme.outlineVariant
-    val dotColor = when {
-        section.triggered -> MaterialTheme.colorScheme.secondary
-        expanded -> MaterialTheme.colorScheme.primary
-        else -> MaterialTheme.colorScheme.outline
-    }
     Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
-        Canvas(Modifier.fillMaxHeight().width(30.dp)) {
-            val x = size.width / 2f
-            val middle = 28.dp.toPx()
-            if (!isFirst) drawLine(railColor, Offset(x, 0f), Offset(x, middle), strokeWidth = 2.dp.toPx())
-            if (!isLast) drawLine(railColor, Offset(x, middle), Offset(x, size.height), strokeWidth = 2.dp.toPx())
-            drawCircle(dotColor, radius = if (expanded) 7.dp.toPx() else 5.dp.toPx(), center = Offset(x, middle))
-            drawCircle(Color.White.copy(alpha = 0.8f), radius = 2.dp.toPx(), center = Offset(x, middle))
-        }
-        Surface(
+        PathRail(
+            nodeState = when {
+                section.triggered -> PathNodeState.Past
+                expanded -> PathNodeState.Current
+                else -> PathNodeState.Future
+            },
+            drawBefore = !isFirst,
+            drawAfter = !isLast,
+            modifier = Modifier.fillMaxHeight(),
+        )
+        FoldedSurface(
             modifier = Modifier.weight(1f).padding(bottom = if (isLast) 0.dp else 10.dp),
-            color = if (expanded) MaterialTheme.colorScheme.surfaceContainerHigh else MaterialTheme.colorScheme.surfaceContainerLow,
-            shape = MaterialTheme.shapes.medium,
+            foldColor = if (expanded) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
+            foldSize = if (expanded) 16.dp else 10.dp,
         ) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Row(
@@ -386,11 +381,11 @@ private fun TaskCardView(
     onToggleStep: (String) -> Unit,
     onComplete: (String) -> Unit,
 ) {
-    Surface(
+    FoldedSurface(
         onClick = { onOpen(card.task.id) },
         modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-        shape = MaterialTheme.shapes.medium,
+        foldColor = TaskAccent,
+        foldSize = 12.dp,
     ) {
         Row {
             Surface(Modifier.width(4.dp).height(54.dp), color = TaskAccent) {}
