@@ -21,7 +21,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -36,6 +35,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.verto.ui.common.EmptyState
+import com.verto.ui.common.FoldedSurface
 import com.verto.ui.common.ScreenHeader
 import com.verto.ui.common.SectionHeader
 import com.verto.ui.theme.BettaPeriwinkle
@@ -52,18 +52,18 @@ fun InboxScreen(onMakeRoutine: (String) -> Unit, viewModel: InboxViewModel = koi
     ) {
         item {
             ScreenHeader(
-                title = "Caçamba",
-                subtitle = "Tira da cabeça agora. Decide o destino depois.",
+                title = "Rascunho",
+                subtitle = "Tira da cabeça sem decidir.",
             )
         }
         item {
-            Surface(
+            FoldedSurface(
                 modifier = Modifier.fillMaxWidth(),
-                color = MaterialTheme.colorScheme.surfaceContainerLow,
-                shape = MaterialTheme.shapes.large,
+                foldColor = MaterialTheme.colorScheme.tertiary,
+                foldSize = 20.dp,
             ) {
                 Column(
-                    Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+                    Modifier.padding(start = 16.dp, end = 28.dp, top = 16.dp, bottom = 20.dp),
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     Text("O que apareceu?", style = MaterialTheme.typography.titleMedium)
@@ -71,7 +71,7 @@ fun InboxScreen(onMakeRoutine: (String) -> Unit, viewModel: InboxViewModel = koi
                         value = state.draft,
                         onValueChange = viewModel::onDraftChange,
                         modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text("Escreve sem organizar") },
+                        placeholder = { Text("Escreve do jeito que vier.") },
                         singleLine = true,
                         shape = MaterialTheme.shapes.medium,
                         keyboardOptions = KeyboardOptions(
@@ -90,7 +90,7 @@ fun InboxScreen(onMakeRoutine: (String) -> Unit, viewModel: InboxViewModel = koi
             item {
                 EmptyState(
                     title = "A cabeça respirou.",
-                    body = "Quando algo aparecer, joga no campo acima. Não precisa decidir nada agora.",
+                    body = "Nada aqui virou obrigação. Você escolhe o que ganha caminho quando estiver pronta.",
                 )
             }
         }
@@ -135,10 +135,10 @@ fun InboxScreen(onMakeRoutine: (String) -> Unit, viewModel: InboxViewModel = koi
 @Composable
 private fun InboxRow(text: String, muted: Boolean, actions: List<Pair<String, () -> Unit>>) {
     var menuOpen by remember { mutableStateOf(false) }
-    Surface(
+    FoldedSurface(
         modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-        shape = MaterialTheme.shapes.medium,
+        foldColor = if (muted) BettaPeriwinkle.copy(alpha = 0.55f) else MaterialTheme.colorScheme.secondary,
+        foldSize = 10.dp,
     ) {
         Row(
             Modifier.padding(start = 16.dp, top = 10.dp, bottom = 10.dp, end = 4.dp),
