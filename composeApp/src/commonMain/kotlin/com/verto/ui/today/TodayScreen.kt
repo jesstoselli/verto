@@ -223,6 +223,7 @@ private fun FocusCard(focus: FocusItem, onOpen: () -> Unit) {
         ) {
             Text("Seu próximo passo", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.secondary)
             Text(focus.title, style = MaterialTheme.typography.headlineSmall)
+            // The action gets its own line: sharing one with the context squeezed it into broken words at large font sizes.
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(
                     focus.context,
@@ -233,8 +234,8 @@ private fun FocusCard(focus: FocusItem, onOpen: () -> Unit) {
                 focus.energy?.let {
                     Text(it.label(), style = MaterialTheme.typography.labelMedium)
                 }
-                Button(onClick = focus.onComplete) { Text("Marcar como feito") }
             }
+            Button(onClick = focus.onComplete, modifier = Modifier.align(Alignment.End)) { Text("Marcar como feito") }
         }
     }
 }
