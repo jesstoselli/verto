@@ -8,6 +8,10 @@ plugins {
     alias(libs.plugins.kotlinSerialization)
 }
 
+compose.resources {
+    packageOfResClass = "com.verto.ui.generated.resources"
+}
+
 kotlin {
     android {
         namespace = "com.verto.ui"
@@ -37,6 +41,7 @@ kotlin {
             implementation(libs.compose.ui)
             implementation(libs.compose.material3)
             implementation(libs.compose.material.icons.core)
+            implementation(compose.components.resources)
             implementation(libs.androidx.lifecycle.viewmodel.compose)
             implementation(libs.androidx.lifecycle.runtime.compose)
             implementation(libs.androidx.navigation.compose)
