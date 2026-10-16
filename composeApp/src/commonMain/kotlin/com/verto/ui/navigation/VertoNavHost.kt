@@ -2,8 +2,15 @@ package com.verto.ui.navigation
 
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Create
@@ -17,6 +24,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -38,10 +46,10 @@ import com.verto.ui.settings.SettingsScreen
 import com.verto.ui.today.TodayScreen
 import kotlin.reflect.KClass
 
-private enum class Tab(val route: Any, val routeClass: KClass<*>, val label: String, val icon: ImageVector) {
-    Today(TodayRoute, TodayRoute::class, "Hoje", Icons.Filled.Home),
-    Inbox(InboxRoute, InboxRoute::class, "Caçamba", Icons.Filled.Create),
-    Plan(PlanRoute, PlanRoute::class, "Planejar", Icons.AutoMirrored.Filled.List),
+internal enum class PrimaryTab(val route: Any, val routeClass: KClass<*>, val label: String, val icon: ImageVector) {
+    Today(TodayRoute, TodayRoute::class, "Agora", Icons.Filled.Home),
+    Inbox(InboxRoute, InboxRoute::class, "Rascunho", Icons.Filled.Create),
+    Plan(PlanRoute, PlanRoute::class, "Trajeto", Icons.AutoMirrored.Filled.List),
 }
 
 @Composable
@@ -49,7 +57,7 @@ fun VertoNavHost() {
     val nav = rememberNavController()
     val entry by nav.currentBackStackEntryAsState()
     val destination = entry?.destination
-    val showTabs = Tab.entries.any { destination?.hasRoute(it.routeClass) == true }
+    val showTabs = PrimaryTab.entries.any { destination?.hasRoute(it.routeClass) == true }
 
     // Editors bring their own Scaffold; tab screens pad the status bar themselves.
     Scaffold(
@@ -60,9 +68,10 @@ fun VertoNavHost() {
                     containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
                     tonalElevation = 0.dp,
                 ) {
-                    Tab.entries.forEach { tab ->
+                    PrimaryTab.entries.forEach { tab ->
+                        val selected = destination?.hasRoute(tab.routeClass) == true
                         NavigationBarItem(
-                            selected = destination?.hasRoute(tab.routeClass) == true,
+                            selected = selected,
                             onClick = {
                                 nav.navigate(tab.route) {
                                     popUpTo(nav.graph.findStartDestination().id) { saveState = true }
@@ -70,11 +79,25 @@ fun VertoNavHost() {
                                     restoreState = true
                                 }
                             },
-                            icon = { Icon(tab.icon, contentDescription = null) },
-                            label = { Text(tab.label) },
+                            icon = {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Icon(tab.icon, contentDescription = null)
+                                    Spacer(Modifier.height(3.dp))
+                                    Box(
+                                        Modifier
+                                            .width(18.dp)
+                                            .height(2.dp)
+                                            .background(
+                                                if (selected) MaterialTheme.colorScheme.primary else Color.Transparent,
+                                                CircleShape,
+                                            ),
+                                    )
+                                }
+                            },
+                            label = { Text(tab.label, style = MaterialTheme.typography.labelMedium) },
                             colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = MaterialTheme.colorScheme.secondary,
-                                selectedTextColor = MaterialTheme.colorScheme.secondary,
+                                selectedIconColor = MaterialTheme.colorScheme.onSurface,
+                                selectedTextColor = MaterialTheme.colorScheme.onSurface,
                                 indicatorColor = Color.Transparent,
                                 unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
                                 unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
