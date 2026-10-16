@@ -38,7 +38,8 @@ class PlanViewModelTest : ViewModelTest() {
 
     @Test
     fun initialTab_isTasks() = runTest {
-        assertEquals(PlanTab.Tasks, viewModel().state.first().selectedTab)
+        // Wait for a state built from the database: ending on the initial value leaves queries running at tearDown.
+        assertEquals(PlanTab.Tasks, viewModel().state.first { it.today != null }.selectedTab)
     }
 
     @Test
@@ -72,5 +73,15 @@ class PlanViewModelTest : ViewModelTest() {
         vm.toggleShowDone()
 
         assertEquals(PlanTab.Anchors, vm.state.first { it.showDone }.selectedTab)
+    }
+
+    @Test
+    fun refreshedRepositoryContent_keepsTheSelectedTab() = runTest {
+        val vm = viewModel()
+        vm.selectTab(PlanTab.Anchors)
+        graph.tasks.save(TaskDraft(null, "Comprar ração"))
+
+        vm.state.first { it.taskCount == 1 }
+        assertEquals(PlanTab.Anchors, vm.state.value.selectedTab)
     }
 }
