@@ -31,7 +31,12 @@ data class PlanUiState(
     val routines: List<RoutineRow> = emptyList(),
     val anchors: List<Anchor> = emptyList(),
     val today: LocalDate? = null,
-)
+    val selectedTab: PlanTab = PlanTab.Tasks,
+) {
+    val taskCount: Int get() = openTasks.size + doneTasks.size
+    val routineCount: Int get() = routines.size
+    val anchorCount: Int get() = anchors.size
+}
 
 class PlanViewModel(
     private val tasks: TaskRepository,
@@ -42,14 +47,15 @@ class PlanViewModel(
 ) : ViewModel() {
 
     private val showDone = MutableStateFlow(false)
+    private val selectedTab = MutableStateFlow(PlanTab.Tasks)
 
     val state: StateFlow<PlanUiState> = combine(
         tasks.observeTasks(),
         routines.observeRoutines(),
         routines.observeAnchors(),
-        showDone,
+        combine(showDone, selectedTab, ::Pair),
         ticker.ticks().map { LogicalDay.of(it, zones.current(), settings.current().dayStartsAt) }.distinctUntilChanged(),
-    ) { taskList, routineList, anchors, show, today ->
+    ) { taskList, routineList, anchors, (show, tab), today ->
         val anchorNames = anchors.associate { it.id to it.name }
         PlanUiState(
             openTasks = taskList.filter { it.doneAt == null },
@@ -58,12 +64,17 @@ class PlanViewModel(
             routines = routineList.map { RoutineRow(it, anchorNames[it.anchorId]) },
             anchors = anchors,
             today = today,
+            selectedTab = tab,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), PlanUiState())
 
     /** Pinning happens in the editor; the list only offers taking a task off today. */
     fun unpin(task: Task) {
         viewModelScope.launch { tasks.setPinned(task.id, false) }
+    }
+
+    fun selectTab(tab: PlanTab) {
+        selectedTab.value = tab
     }
 
     fun toggleShowDone() {
